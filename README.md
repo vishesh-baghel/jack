@@ -387,19 +387,9 @@ We welcome contributions! Areas where help is needed:
 
 ---
 
-## Inspiration
-
-Jack is inspired by:
-- **@levelsio** - Building in public, revenue transparency
-- **@swyx** - Learning in public, teaching
-- **@tdinh_me** - Honest updates, real metrics
-- **Cursor IDE** - AI that learns your style
-
----
-
 ## License
 
-MIT (pending - will be added at open source release)
+MIT (pending - will be added at open source release) 
 
 ---
 
