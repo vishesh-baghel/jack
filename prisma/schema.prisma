@@ -1,0 +1,166 @@
+// Jack X Content Agent - Database Schema
+// Based on specs/DATA_MODELS.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PRISMA_DATABASE_URL")
+  directUrl = env("POSTGRES_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String?
+  passphrase String?  // For owner auth - manually set in DB
+  isGuest    Boolean  @default(false)
+  isOwner    Boolean  @default(false) // True for the main user (you)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  projects      Project[]
+  creators      Creator[]
+  toneConfig    ToneConfig?
+  contentIdeas  ContentIdea[]
+  posts         Post[]
+  trendingCache TrendingTopic[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@map("projects")
+}
+
+model Creator {
+  id        String   @id @default(cuid())
+  userId    String
+  xHandle   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, xHandle])
+  @@index([userId, isActive])
+  @@map("creators")
+}
+
+model ToneConfig {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  lowercase       Boolean  @default(true)
+  noEmojis        Boolean  @default(true)
+  noHashtags      Boolean  @default(true)
+  showFailures    Boolean  @default(true)
+  includeNumbers  Boolean  @default(true)
+  learnedPatterns Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tone_config")
+}
+
+model TrendingTopic {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  mentions  Int      @default(0)
+  cachedAt  DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("trending_topics")
+}
+
+model ContentIdea {
+  id                  String   @id @default(cuid())
+  userId              String
+  title               String
+  description         String
+  rationale           String
+  contentPillar       String
+  suggestedFormat     String
+  estimatedEngagement String
+  status              String   @default("suggested")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outlines Outline[]
+
+  @@index([userId, status, createdAt])
+  @@map("content_ideas")
+}
+
+model Outline {
+  id              String   @id @default(cuid())
+  contentIdeaId   String
+  format          String
+  sections        Json
+  estimatedLength String
+  toneReminders   Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contentIdea ContentIdea @relation(fields: [contentIdeaId], references: [id], onDelete: Cascade)
+  drafts      Draft[]
+
+  @@index([contentIdeaId])
+  @@map("outlines")
+}
+
+model Draft {
+  id        String    @id @default(cuid())
+  outlineId String
+  content   String
+  isPosted  Boolean   @default(false)
+  postedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  outline Outline @relation(fields: [outlineId], references: [id], onDelete: Cascade)
+  post    Post?
+
+  @@index([outlineId, isPosted])
+  @@map("drafts")
+}
+
+model Post {
+  id            String    @id @default(cuid())
+  userId        String
+  draftId       String    @unique
+  content       String
+  contentType   String
+  contentPillar String
+  isMarkedGood  Boolean   @default(false)
+  markedGoodAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  draft Draft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isMarkedGood, createdAt])
+  @@index([userId, contentPillar])
+  @@map("posts")
+}
