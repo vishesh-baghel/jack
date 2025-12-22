@@ -9,6 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { isSignupAllowed } from '@/lib/auth-server';
 import { AuthForms } from './_components/auth-forms';
 
+// Force dynamic rendering - this page queries the database
+export const dynamic = 'force-dynamic';
+
 export default async function AuthPage() {
   const signupAllowed = await isSignupAllowed();
 
