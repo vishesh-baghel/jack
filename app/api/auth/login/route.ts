@@ -2,11 +2,13 @@
  * Login API Route
  * Single-user passphrase authentication
  * Rate limited to prevent brute force attacks
+ * Supports both bcrypt-hashed and plain text passphrases (for migration)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/client';
 import { z } from 'zod';
+import bcrypt from 'bcrypt';
 import { 
   checkRateLimit, 
   getClientIp, 
@@ -16,6 +18,17 @@ import {
 const loginSchema = z.object({
   passphrase: z.string().min(1, 'passphrase is required'),
 });
+
+/**
+ * Verify passphrase against stored value
+ * Supports both bcrypt-hashed (starts with $2) and plain text (legacy)
+ */
+async function verifyPassphrase(inputPassphrase: string, storedPassphrase: string): Promise<boolean> {
+  if (storedPassphrase.startsWith('$2')) {
+    return bcrypt.compare(inputPassphrase, storedPassphrase);
+  }
+  return inputPassphrase === storedPassphrase;
+}
 
 // Spicy auth error messages
 const AUTH_ERROR_MESSAGES = [
@@ -57,21 +70,36 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { passphrase } = loginSchema.parse(body);
 
-    // Find owner user with matching passphrase
+    // Find owner user
     const user = await prisma.user.findFirst({
       where: { 
         isOwner: true,
-        passphrase: passphrase,
       },
       select: {
         id: true,
         email: true,
         name: true,
+        passphrase: true,
         createdAt: true,
       },
     });
 
-    if (!user) {
+    if (!user || !user.passphrase) {
+      return NextResponse.json(
+        { error: getRandomAuthError() },
+        { 
+          status: 401,
+          headers: {
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          }
+        }
+      );
+    }
+
+    // Verify passphrase (supports both bcrypt-hashed and plain text)
+    const isValidPassphrase = await verifyPassphrase(passphrase, user.passphrase);
+
+    if (!isValidPassphrase) {
       return NextResponse.json(
         { error: getRandomAuthError() },
         { 
