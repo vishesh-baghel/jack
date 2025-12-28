@@ -6,7 +6,7 @@
 import { cookies } from 'next/headers';
 
 // Re-export client constants for convenience in server code
-export { GUEST_USER_EMAIL, DEMO_USER_EMAIL } from './auth-client';
+export { GUEST_USER_EMAIL } from './auth-client';
 
 /**
  * Get current user ID from cookies (server-side)
