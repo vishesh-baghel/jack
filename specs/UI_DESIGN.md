@@ -212,7 +212,18 @@
 │                                                │
 │  Settings                                      │
 │                                                │
-│  Tabs: [Tone] [Projects] [Creators]           │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│                                                │
+│  Visitor Mode                     [Active]     │
+│                                                │
+│  let others explore your jack in read-only mode│
+│  visitor mode is on             [Toggle ━●]    │
+│  visitors can browse your content without      │
+│  making changes                                │
+│                                                │
+│  guest access url: http://localhost:3000/auth  │
+│  visitors can click "continue as guest" to     │
+│  explore your jack                             │
 │                                                │
 │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
 │                                                │

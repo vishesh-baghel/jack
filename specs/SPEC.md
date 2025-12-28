@@ -107,6 +107,12 @@ Jack is an AI agent that reduces content creation time from 50 min to **20 min p
 **Authentication (Single-User Model)**
 - Passphrase-based auth for owner (you)
 - Guest mode for portfolio visitors (read-only)
+  - **Owner-controlled:** Enable/disable via settings toggle
+  - **Default:** Disabled on first deployment
+  - **Guest email:** `guest@localhost`
+  - **When enabled:** Creates guest account automatically
+  - **When disabled:** Deletes guest account automatically
+  - Guests see owner's content via `demoUserId`
 - No signup flow - single user tool, not SaaS
 - Rate limiting on auth endpoint (5 attempts/minute)
 

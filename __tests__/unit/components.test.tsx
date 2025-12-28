@@ -18,7 +18,7 @@ describe('Button Component', () => {
     const { Button } = await import('@/components/ui/button');
     const { container } = render(<Button variant="outline">Outline</Button>);
     const button = container.querySelector('button');
-    expect(button).toHaveClass('border');
+    expect(button).toHaveClass('border-2');
   });
 });
 

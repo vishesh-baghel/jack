@@ -46,8 +46,8 @@ export function GuestTooltipButton({
             <p className="text-xs text-muted-foreground mt-1">
               {guestTooltip || "this is my personal agent. want your own?"}
             </p>
-            <Link 
-              href="https://github.com/vishesh-baghel/jack-x-agent" 
+            <Link
+              href="https://squad.visheshbaghel.com/deploy/jack"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-primary hover:underline mt-2 block"

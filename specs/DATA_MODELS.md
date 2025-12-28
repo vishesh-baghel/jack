@@ -40,6 +40,7 @@ CREATE TABLE users (
   passphrase TEXT, -- For owner auth - manually set in DB
   is_guest BOOLEAN DEFAULT false,
   is_owner BOOLEAN DEFAULT false, -- True for the main user (you)
+  allow_visitor_mode BOOLEAN DEFAULT false, -- Owner controls guest access
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -47,6 +48,9 @@ CREATE TABLE users (
 -- Note: This is a single-user tool, not SaaS
 -- Owner creates their account manually in DB with passphrase
 -- Guests use read-only lurk mode
+-- Owner can enable/disable visitor mode via settings
+-- When visitor mode is enabled, a guest@localhost account is created
+-- When disabled, guest account is deleted
 
 -- Tone configuration (1 per user)
 CREATE TABLE tone_config (

@@ -12,6 +12,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
+// Mock auth functions (to avoid cookies() errors)
+vi.mock('@/lib/auth', () => ({
+  getCurrentUserId: vi.fn(),
+  blockGuestWrite: vi.fn(),
+  getDataUserId: vi.fn(),
+  isGuestUser: vi.fn(),
+}));
+
 // Mock all database functions
 vi.mock('@/lib/db/drafts', () => ({
   getDraftById: vi.fn(),
@@ -41,6 +49,7 @@ vi.mock('@/lib/db/creators', () => ({
 }));
 
 // Import mocked functions
+import { getCurrentUserId, blockGuestWrite } from '@/lib/auth';
 import { getDraftById, updateDraft, deleteDraft, markDraftAsPosted } from '@/lib/db/drafts';
 import { getUserPosts, createPost, markPostAsGood } from '@/lib/db/posts';
 import { updateIdeaStatus } from '@/lib/db/content-ideas';
@@ -73,6 +82,9 @@ const createMockParams = (id: string) => Promise.resolve({ id });
 describe('Draft API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock auth functions to return non-guest user
+    vi.mocked(getCurrentUserId).mockResolvedValue('user-123');
+    vi.mocked(blockGuestWrite).mockResolvedValue(null);
   });
 
   describe('PATCH /api/drafts/[id] - Update Draft', () => {
@@ -308,6 +320,9 @@ describe('Draft API Routes', () => {
 describe('Posts API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock auth functions to return non-guest user
+    vi.mocked(getCurrentUserId).mockResolvedValue('user-123');
+    vi.mocked(blockGuestWrite).mockResolvedValue(null);
   });
 
   describe('GET /api/posts - Get Posts', () => {
@@ -542,6 +557,9 @@ describe('Posts API Routes', () => {
 describe('Ideas API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock auth functions to return non-guest user
+    vi.mocked(getCurrentUserId).mockResolvedValue('user-123');
+    vi.mocked(blockGuestWrite).mockResolvedValue(null);
   });
 
   describe('PATCH /api/ideas/[id] - Update Idea Status', () => {
@@ -655,6 +673,9 @@ describe('Ideas API Routes', () => {
 describe('Creators API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock auth functions to return non-guest user
+    vi.mocked(getCurrentUserId).mockResolvedValue('user-123');
+    vi.mocked(blockGuestWrite).mockResolvedValue(null);
   });
 
   describe('GET /api/creators - Get Creators', () => {

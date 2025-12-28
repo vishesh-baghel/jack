@@ -54,15 +54,12 @@ export const OutlineSectionSchema = z.object({
   heading: z.string().min(1, 'Heading is required'),
   keyPoints: z
     .array(z.string())
-    .min(1, 'Must have at least 1 key point')
-    .max(10, 'Must have at most 10 key points'),
+    .min(3, 'Must have at least 3 key points')
+    .max(5, 'Must have at most 5 key points'),
   toneGuidance: z.string(),
   examples: z
     .array(z.string())
-    .min(0, 'Examples are optional')
-    .max(5, 'Must have at most 5 examples')
-    .optional()
-    .default([]),
+    .min(1, 'Must have at least 1 example'),
 });
 
 export type OutlineSection = z.infer<typeof OutlineSectionSchema>;

@@ -623,8 +623,8 @@ Response:
 
 ## Flow 10: Visitor Mode Experience
 
-**Actor:** Follower, potential client, or curious visitor  
-**Goal:** See behind the scenes of Vishesh's content creation process  
+**Actor:** Follower, potential client, or curious visitor
+**Goal:** See behind the scenes of Vishesh's content creation process
 **Time:** 2-5 minutes
 
 ### Purpose
@@ -635,14 +635,29 @@ Visitor mode exists to:
 - **Demonstrate the tool** - potential users can see Jack in action
 - **Portfolio showcase** - proof of building in public
 
+**Note:** Visitor mode must be **enabled by the owner** in settings. By default, it's disabled on first deployment.
+
 ### Steps
 
-**Landing on Auth Page**
+**Landing on Auth Page (When Visitor Mode is Enabled)**
 ```
 1. Navigate to jack.visheshbaghel.com
 2. See auth page with passphrase field
 3. Notice "see what i'm cooking" button
 4. Click to enter visitor mode
+5. Backend verifies owner has enabled visitor mode
+6. Guest account exists, access granted
+```
+
+**Landing on Auth Page (When Visitor Mode is Disabled)**
+```
+1. Navigate to jack.visheshbaghel.com
+2. See auth page with passphrase field
+3. Notice "see what i'm cooking" button
+4. Click to enter visitor mode
+5. Backend checks: visitor mode disabled
+6. Error message: "visitor mode is currently disabled by the owner"
+7. Cannot proceed to dashboard
 ```
 
 **Exploring as Visitor**
@@ -755,3 +770,96 @@ await prisma.user.create({
 - Passphrase is stored in plain text (acceptable for single-user)
 - Rate limiting protects against brute force
 - Never expose passphrase in logs or client code
+
+---
+
+## Flow 12: Owner Managing Visitor Mode
+
+**Actor:** Owner (Vishesh)  
+**Goal:** Enable or disable visitor mode to control guest access  
+**Time:** 30 seconds
+
+### Purpose
+
+Visitor mode is **owner-controlled**. By default, it's disabled on first deployment for privacy. The owner can enable it when ready to showcase their content creation process.
+
+### Enabling Visitor Mode
+
+```
+1. Navigate to Settings (/settings)
+2. See "Visitor Mode" section at the top
+3. Toggle shows "visitor mode is off"
+4. Click the toggle switch
+5. Toggle animates to "on" position
+6. Message appears: "Visitor mode enabled. Guest account created."
+7. Guest access URL displayed: http://jack.visheshbaghel.com/auth
+8. "Active" badge appears next to title
+```
+
+**What happens behind the scenes:**
+- Backend creates guest user with email `guest@localhost`
+- Guest user is marked as `isGuest: true` in database
+- Owner's `allowVisitorMode` field set to `true`
+- Guest login route now allows access
+
+### Disabling Visitor Mode
+
+```
+1. Navigate to Settings (/settings)
+2. Toggle shows "visitor mode is on"
+3. Click the toggle switch
+4. Toggle animates to "off" position
+5. Message appears: "Visitor mode disabled. Guest account deleted."
+6. Guest access URL hidden
+7. "Active" badge disappears
+```
+
+**What happens behind the scenes:**
+- Backend deletes guest user from database
+- Owner's `allowVisitorMode` field set to `false`
+- Guest login route returns 403 error
+- Active guest sessions remain valid until logout
+
+### Guest Login Behavior
+
+**When visitor mode is enabled:**
+```
+1. Visitor navigates to /auth
+2. Clicks "see what i'm cooking" button
+3. Backend checks owner's `allowVisitorMode` flag
+4. Creates guest session with `demoUserId` pointing to owner
+5. Redirects to dashboard showing owner's content
+```
+
+**When visitor mode is disabled:**
+```
+1. Visitor navigates to /auth
+2. Clicks "see what i'm cooking" button
+3. Backend checks owner's `allowVisitorMode` flag
+4. Returns 403 error
+5. Shows message: "visitor mode is currently disabled by the owner"
+6. Visitor cannot access
+```
+
+### Default State
+
+**On first deployment:**
+- Visitor mode is **disabled by default**
+- No guest account exists
+- Owner must explicitly enable it in settings
+- Provides privacy until owner is ready to showcase
+
+**Security considerations:**
+- Only owner can toggle visitor mode (guests blocked)
+- Guest account is created/deleted automatically
+- Guest sessions are read-only (all write operations blocked)
+- Guest cannot access owner's passphrase or sensitive data
+
+### Success Metrics
+
+- **Owner control:** 100% success rate for toggle operations
+- **Privacy:** No guest access until explicitly enabled
+- **Reliability:** Guest account creation/deletion succeeds every time
+- **Security:** No guest can modify owner's data
+
+---
