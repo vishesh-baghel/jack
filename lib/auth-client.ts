@@ -4,8 +4,8 @@
  */
 
 // Guest user constants
-export const GUEST_USER_EMAIL = 'guest@visheshbaghel.com';
-export const DEMO_USER_EMAIL = 'visheshbaghel99@gmail.com'; // The user whose content guests will see
+export const GUEST_USER_EMAIL = 'guest@localhost';
+// DEMO_USER_EMAIL is deprecated - we now fetch the owner dynamically
 
 /**
  * Set user session (client-side helper)

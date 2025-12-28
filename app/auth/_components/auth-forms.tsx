@@ -106,7 +106,12 @@ export function AuthForms({ signupAllowed }: AuthFormsProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'guest login failed');
+        // Show specific error for visitor mode disabled
+        if (response.status === 403) {
+          setError('visitor mode is currently disabled by the owner');
+        } else {
+          setError(data.error || 'guest login failed');
+        }
         return;
       }
 

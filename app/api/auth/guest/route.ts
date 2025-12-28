@@ -5,35 +5,55 @@
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/client';
-import { GUEST_USER_EMAIL, DEMO_USER_EMAIL } from '@/lib/auth';
+import { GUEST_USER_EMAIL } from '@/lib/auth-client';
 
 export async function POST() {
   try {
-    // Find or create the guest user
-    let guestUser = await prisma.user.findUnique({
+    // First, check if visitor mode is enabled
+    const owner = await prisma.user.findFirst({
+      where: { isOwner: true },
+      select: { id: true, allowVisitorMode: true },
+    });
+
+    if (!owner) {
+      return NextResponse.json(
+        { error: 'Service not configured. Please contact the administrator.' },
+        { status: 503 }
+      );
+    }
+
+    if (!owner.allowVisitorMode) {
+      return NextResponse.json(
+        { error: 'Visitor mode is currently disabled by the owner.' },
+        { status: 403 }
+      );
+    }
+
+    // Find the guest user (should exist if visitor mode is enabled)
+    const guestUser = await prisma.user.findUnique({
       where: { email: GUEST_USER_EMAIL },
     });
 
     if (!guestUser) {
-      guestUser = await prisma.user.create({
+      // This shouldn't happen if visitor mode is properly enabled
+      // But we'll create it just in case
+      const newGuest = await prisma.user.create({
         data: {
           email: GUEST_USER_EMAIL,
           name: 'Guest User',
           isGuest: true,
         },
       });
-    }
 
-    // Find the demo user whose content guests will see
-    const demoUser = await prisma.user.findUnique({
-      where: { email: DEMO_USER_EMAIL },
-    });
-
-    if (!demoUser) {
-      return NextResponse.json(
-        { error: 'Demo content not available. Please try again later.' },
-        { status: 503 }
-      );
+      return NextResponse.json({
+        user: {
+          id: newGuest.id,
+          email: newGuest.email,
+          name: newGuest.name,
+          isGuest: true,
+        },
+        demoUserId: owner.id,
+      });
     }
 
     return NextResponse.json({
@@ -43,7 +63,7 @@ export async function POST() {
         name: guestUser.name,
         isGuest: true,
       },
-      demoUserId: demoUser.id,
+      demoUserId: owner.id,
     });
   } catch (error) {
     console.error('Guest login error:', error);

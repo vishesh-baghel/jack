@@ -12,14 +12,15 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  name       String?
-  passphrase String?  // For owner auth - manually set in DB
-  isGuest    Boolean  @default(false)
-  isOwner    Boolean  @default(false) // True for the main user (you)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String   @id @default(cuid())
+  email            String   @unique
+  name             String?
+  passphrase       String?  // For owner auth - manually set in DB
+  isGuest          Boolean  @default(false)
+  isOwner          Boolean  @default(false) // True for the main user (you)
+  allowVisitorMode Boolean  @default(false) // Allow guest/visitor access
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   projects      Project[]
   creators      Creator[]
