@@ -44,13 +44,13 @@ export function truncate(text: string, length: number): string {
 export function getEngagementColor(level: 'low' | 'medium' | 'high'): string {
   switch (level) {
     case 'low':
-      return 'text-gray-500';
+      return 'bg-gray-100 text-gray-700';
     case 'medium':
-      return 'text-yellow-600';
+      return 'bg-yellow-100 text-yellow-700';
     case 'high':
-      return 'text-green-600';
+      return 'bg-green-100 text-green-700';
     default:
-      return 'text-gray-500';
+      return 'bg-gray-100 text-gray-700';
   }
 }
 
@@ -59,15 +59,18 @@ export function getEngagementColor(level: 'low' | 'medium' | 'high'): string {
  */
 export function getPillarColor(pillar: string): string {
   const colors: Record<string, string> = {
-    engineering: 'bg-blue-100 text-blue-800',
-    career: 'bg-purple-100 text-purple-800',
-    learning: 'bg-green-100 text-green-800',
-    productivity: 'bg-orange-100 text-orange-800',
-    side_projects: 'bg-pink-100 text-pink-800',
-    lessons_learned: 'bg-indigo-100 text-indigo-800',
-    helpful_content: 'bg-teal-100 text-teal-800',
-    build_progress: 'bg-cyan-100 text-cyan-800',
+    engineering: 'bg-blue-100 text-blue-700',
+    career: 'bg-purple-100 text-purple-700',
+    learning: 'bg-green-100 text-green-700',
+    productivity: 'bg-orange-100 text-orange-700',
+    side_projects: 'bg-pink-100 text-pink-700',
+    'side-projects': 'bg-pink-100 text-pink-700',
+    lessons_learned: 'bg-indigo-100 text-indigo-700',
+    helpful_content: 'bg-teal-100 text-teal-700',
+    build_progress: 'bg-cyan-100 text-cyan-700',
+    decisions: 'bg-violet-100 text-violet-700',
+    promotion: 'bg-rose-100 text-rose-700',
   };
-  
-  return colors[pillar] || 'bg-gray-100 text-gray-800';
+
+  return colors[pillar] || 'bg-gray-100 text-gray-700';
 }

@@ -41,6 +41,7 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
   const router = useRouter();
   const [ideas, setIdeas] = useState<ContentIdea[]>(initialIdeas);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingOutlineId, setGeneratingOutlineId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<'suggested' | 'accepted' | 'rejected' | 'used'>('suggested');
   const [isGuest, setIsGuest] = useState(false);
   
@@ -109,6 +110,7 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
   };
 
   const handleGenerateOutline = async (idea: ContentIdea) => {
+    setGeneratingOutlineId(idea.id);
     try {
       const response = await fetch('/api/outlines/generate', {
         method: 'POST',
@@ -133,6 +135,8 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
       router.push(`/outline/${outline.id}`);
     } catch (error) {
       console.error('Error generating outline:', error);
+    } finally {
+      setGeneratingOutlineId(null);
     }
   };
 
@@ -199,30 +203,33 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
         {filteredIdeas.map((idea) => (
           <Card key={idea.id} className="flex flex-col">
             <CardHeader>
-              <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-lg">{idea.title}</CardTitle>
-                <span className={`text-xs px-2 py-1 rounded ${getPillarColor(idea.contentPillar)}`}>
-                  {idea.contentPillar}
-                </span>
-              </div>
+              <CardTitle className="text-lg">{idea.title}</CardTitle>
               <CardDescription className="line-clamp-2">
                 {idea.description}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground flex-1">
                 <p className="font-medium">why this hits:</p>
                 <p className="line-clamp-3">{idea.rationale}</p>
               </div>
-              
-              <div className="flex items-center justify-between text-xs text-muted-foreground mt-4">
-                <span>{idea.suggestedFormat}</span>
-                <span className={getEngagementColor(idea.estimatedEngagement)}>
-                  {idea.estimatedEngagement} engagement
-                </span>
-              </div>
 
-              <div className="flex gap-2 pt-2 mt-auto">
+              {/* Bottom section - tags, buttons, timestamp */}
+              <div className="mt-auto">
+                {/* Tags row */}
+                <div className="flex flex-wrap items-center gap-2 pt-4">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getPillarColor(idea.contentPillar)}`}>
+                    {idea.contentPillar.replace(/_/g, ' ')}
+                  </span>
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-muted font-medium">
+                    {idea.suggestedFormat}
+                  </span>
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getEngagementColor(idea.estimatedEngagement)}`}>
+                    {idea.estimatedEngagement} engagement
+                  </span>
+                </div>
+
+                <div className="flex gap-2 pt-4">
                 {idea.status === 'suggested' && (
                   <>
                     <GuestTooltipButton
@@ -253,8 +260,9 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
                       className="w-full"
                       onClick={() => handleGenerateOutline(idea)}
                       isGuest={isGuest}
+                      disabled={generatingOutlineId === idea.id}
                     >
-                      make it make sense
+                      {generatingOutlineId === idea.id ? 'generating outline...' : 'make it make sense'}
                     </GuestTooltipButton>
                     {idea.outlines && idea.outlines.length > 0 && (
                       <p className="text-xs text-muted-foreground text-center mt-2">
@@ -273,11 +281,12 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
                     view outline
                   </Button>
                 )}
-              </div>
+                </div>
 
-              <p className="text-xs text-muted-foreground mt-3">
-                {formatRelativeTime(new Date(idea.createdAt))}
-              </p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  {formatRelativeTime(new Date(idea.createdAt))}
+                </p>
+              </div>
             </CardContent>
           </Card>
         ))}

@@ -66,6 +66,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle structured output validation errors
+    if (error instanceof Error) {
+      // Check if it's a structured output validation error
+      if (error.message.includes('Structured output validation failed')) {
+        console.error('Structured output validation failed. This usually means the LLM did not generate output matching the schema.');
+        console.error('Error details:', error);
+
+        return NextResponse.json(
+          {
+            error: 'Failed to generate valid outline structure',
+            details: error.message,
+            hint: 'The AI generated an outline that does not match the required schema. Please try again.'
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: 'Failed to generate outline', details: error.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to generate outline' },
       { status: 500 }
