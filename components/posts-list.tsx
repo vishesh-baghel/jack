@@ -12,9 +12,22 @@ import { GuestTooltipButton } from '@/components/guest-tooltip-button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { DateRangeFilter } from '@/components/date-range-filter';
+import { Pagination } from '@/components/pagination';
 import { useDateRangeFilter } from '@/hooks/use-date-range-filter';
-import { formatRelativeTime, getPillarColor } from '@/lib/utils';
+import { usePagination } from '@/hooks/use-pagination';
+import { formatRelativeTime, getPillarColor, formatLabel } from '@/lib/utils';
 import { getUserSession } from '@/lib/auth-client';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Post {
   id: string;
@@ -43,6 +56,8 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   
   const { 
@@ -117,14 +132,20 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
     }
   };
 
-  const handleDelete = async (post: Post) => {
-    if (!confirm('Are you sure you want to delete this draft?')) return;
-    
-    setLoadingAction(`delete-${post.draftId}`);
+  const openDeleteDialog = (post: Post) => {
+    setPostToDelete(post);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!postToDelete) return;
+
+    setLoadingAction(`delete-${postToDelete.draftId}`);
+    setDeleteDialogOpen(false);
     setError(null);
-    
+
     try {
-      const response = await fetch(`/api/drafts/${post.draftId}`, {
+      const response = await fetch(`/api/drafts/${postToDelete.draftId}`, {
         method: 'DELETE',
       });
 
@@ -133,12 +154,16 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
         throw new Error(data.error || 'Failed to delete draft');
       }
 
-      setPosts(posts.filter(p => p.draftId !== post.draftId));
+      setPosts(posts.filter(p => p.draftId !== postToDelete.draftId));
+      toast.success('draft deleted');
     } catch (err) {
       console.error('Error deleting draft:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete draft');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to delete draft';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoadingAction(null);
+      setPostToDelete(null);
     }
   };
 
@@ -221,13 +246,28 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
     // Status filter
     if (filter === 'good' && !post.isMarkedGood) return false;
     if (filter === 'posted' && !post.isPosted) return false;
-    
+
     // Date range filter
     const postDate = new Date(post.createdAt);
     const startDate = getStartDate();
     const endDate = getEndDate();
-    
+
     return postDate >= startDate && postDate <= endDate;
+  });
+
+  // Pagination - reset when filter or date range changes
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedPosts,
+    nextPage,
+    prevPage,
+    hasNextPage,
+    hasPrevPage,
+  } = usePagination({
+    items: filteredPosts,
+    itemsPerPage: 9,
+    resetDependencies: [filter, dateRange, customStartDate, customEndDate],
   });
 
   return (
@@ -292,27 +332,37 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
             shipped ({posts.filter(p => p.isPosted).length})
           </button>
         </div>
-        <DateRangeFilter
-          value={dateRange}
-          onChange={handleDateRangeChange}
-          customStartDate={customStartDate}
-          customEndDate={customEndDate}
-        />
+        <div className="flex items-center gap-3">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrevPage={prevPage}
+            onNextPage={nextPage}
+            hasPrevPage={hasPrevPage}
+            hasNextPage={hasNextPage}
+          />
+          <DateRangeFilter
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            customStartDate={customStartDate}
+            customEndDate={customEndDate}
+          />
+        </div>
       </div>
 
       {/* Posts List */}
       <div className="space-y-4">
-        {filteredPosts.map((post) => (
+        {paginatedPosts.map((post) => (
           <Card key={post.draftId}>
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className={getPillarColor(post.contentPillar)}>
-                      {post.contentPillar}
+                      {formatLabel(post.contentPillar)}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {post.contentType}
+                      {formatLabel(post.contentType)}
                     </span>
                     {post.isMarkedGood && (
                       <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
@@ -381,7 +431,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
                   <GuestTooltipButton
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleDelete(post)}
+                    onClick={() => openDeleteDialog(post)}
                     disabled={loadingAction === `delete-${post.draftId}`}
                     isGuest={isGuest}
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -425,7 +475,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
             no {filter === 'good' ? 'bangers ' : filter === 'posted' ? 'shipped content ' : ''}yet
           </p>
           <p className="text-sm mt-2">
-            {filter === 'good' 
+            {filter === 'good'
               ? 'be honest with yourself - which ones actually slap?'
               : filter === 'posted'
                 ? 'the timeline is waiting. your audience is starving'
@@ -434,6 +484,26 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
           </p>
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>delete this draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              this will permanently delete your draft. this action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              yeet it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

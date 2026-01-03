@@ -48,12 +48,22 @@ vi.mock('@/lib/db/creators', () => ({
   toggleCreatorStatus: vi.fn(),
 }));
 
+vi.mock('@/lib/apify/twitter-scraper', () => ({
+  validateTwitterHandle: vi.fn(),
+  scrapeTwitterUser: vi.fn(),
+}));
+
+vi.mock('@/lib/db/creator-tweets', () => ({
+  storeCreatorTweets: vi.fn(),
+}));
+
 // Import mocked functions
 import { getCurrentUserId, blockGuestWrite } from '@/lib/auth';
 import { getDraftById, updateDraft, deleteDraft, markDraftAsPosted } from '@/lib/db/drafts';
 import { getUserPosts, createPost, markPostAsGood } from '@/lib/db/posts';
 import { updateIdeaStatus } from '@/lib/db/content-ideas';
 import { getActiveCreators, addCreator, toggleCreatorStatus } from '@/lib/db/creators';
+import { validateTwitterHandle } from '@/lib/apify/twitter-scraper';
 
 // Helper to create mock NextRequest
 const createMockRequest = (options: {
@@ -676,6 +686,11 @@ describe('Creators API Routes', () => {
     // Mock auth functions to return non-guest user
     vi.mocked(getCurrentUserId).mockResolvedValue('user-123');
     vi.mocked(blockGuestWrite).mockResolvedValue(null);
+    // Mock Twitter handle validation to succeed by default
+    vi.mocked(validateTwitterHandle).mockResolvedValue({
+      valid: true,
+      userId: 'twitter-user-123',
+    });
   });
 
   describe('GET /api/creators - Get Creators', () => {
@@ -770,7 +785,7 @@ describe('Creators API Routes', () => {
 
       expect(response.status).toBe(201);
       expect(data.creator.xHandle).toBe('@newcreator');
-      expect(addCreator).toHaveBeenCalledWith('user-123', '@newcreator');
+      expect(addCreator).toHaveBeenCalledWith('user-123', '@newcreator', 'twitter-user-123');
     });
 
     it('should normalize handle without @ prefix', async () => {
@@ -793,7 +808,7 @@ describe('Creators API Routes', () => {
       const response = await POST(request);
 
       expect(response.status).toBe(201);
-      expect(addCreator).toHaveBeenCalledWith('user-123', '@newcreator');
+      expect(addCreator).toHaveBeenCalledWith('user-123', '@newcreator', 'twitter-user-123');
     });
 
     it('should return 400 if required fields are missing', async () => {

@@ -1,6 +1,6 @@
 /**
  * Tone Config Component
- * Manage tone preferences and view learned patterns
+ * Manage custom voice rules and view learned patterns
  */
 
 'use client';
@@ -8,7 +8,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 interface ToneConfig {
   lowercase: boolean;
@@ -16,12 +17,16 @@ interface ToneConfig {
   noHashtags: boolean;
   showFailures: boolean;
   includeNumbers: boolean;
+  customRules?: string[];
   learnedPatterns: {
     avgPostLength?: number;
     commonPhrases?: string[];
     showFailures?: boolean;
     includeNumbers?: boolean;
     successfulPillars?: string[];
+    styleNotes?: string[];
+    voiceCharacteristics?: string[];
+    lastUpdated?: string;
   };
 }
 
@@ -31,18 +36,30 @@ interface ToneConfigProps {
 }
 
 export function ToneConfigComponent({ userId, initialConfig }: ToneConfigProps) {
-  const [config, setConfig] = useState<ToneConfig>(initialConfig || {
+  const [customRules, setCustomRules] = useState<string[]>(
+    initialConfig?.customRules || []
+  );
+  const [newRule, setNewRule] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [config] = useState<ToneConfig>(initialConfig || {
     lowercase: true,
     noEmojis: true,
     noHashtags: true,
     showFailures: true,
     includeNumbers: true,
+    customRules: [],
     learnedPatterns: {},
   });
-  const [isSaving, setIsSaving] = useState(false);
 
-  const handleToggle = (key: keyof Omit<ToneConfig, 'learnedPatterns'>) => {
-    setConfig({ ...config, [key]: !config[key] });
+  const handleAddRule = () => {
+    if (newRule.trim()) {
+      setCustomRules([...customRules, newRule.trim()]);
+      setNewRule('');
+    }
+  };
+
+  const handleRemoveRule = (index: number) => {
+    setCustomRules(customRules.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -53,55 +70,24 @@ export function ToneConfigComponent({ userId, initialConfig }: ToneConfigProps) 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          preferences: {
-            lowercase: config.lowercase,
-            noEmojis: config.noEmojis,
-            noHashtags: config.noHashtags,
-            showFailures: config.showFailures,
-            includeNumbers: config.includeNumbers,
-          },
+          customRules,
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to save config');
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error(error.error || 'failed to save custom rules');
+        return;
+      }
+
+      toast.success('custom rules saved successfully');
     } catch (error) {
       console.error('Error saving config:', error);
+      toast.error('something went wrong. please try again.');
     } finally {
       setIsSaving(false);
     }
   };
-
-  const toggleOptions: Array<{
-    key: keyof Omit<ToneConfig, 'learnedPatterns'>;
-    label: string;
-    description: string;
-  }> = [
-    {
-      key: 'lowercase',
-      label: 'lowercase only',
-      description: 'use lowercase for everything except proper nouns',
-    },
-    {
-      key: 'noEmojis',
-      label: 'no emojis',
-      description: 'keep content clean and professional',
-    },
-    {
-      key: 'noHashtags',
-      label: 'no hashtags',
-      description: 'avoid using #tags in content',
-    },
-    {
-      key: 'showFailures',
-      label: 'show failures',
-      description: 'be honest about struggles and learning process',
-    },
-    {
-      key: 'includeNumbers',
-      label: 'include numbers',
-      description: 'use specific metrics and data points',
-    },
-  ];
 
   return (
     <div className="space-y-6">
@@ -114,36 +100,65 @@ export function ToneConfigComponent({ userId, initialConfig }: ToneConfigProps) 
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Preferences */}
+        {/* Custom Voice Rules */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">your voice settings</h2>
           <Card>
-            <CardContent className="pt-6 space-y-4">
-              {toggleOptions.map(({ key, label, description }) => (
-                <div key={key} className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <Label htmlFor={key} className="text-base cursor-pointer">
-                      {label}
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {description}
-                    </p>
-                  </div>
-                  <button
-                    id={key}
-                    onClick={() => handleToggle(key)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
-                      config[key] ? 'bg-primary' : 'bg-muted'
-                    }`}
+            <CardHeader>
+              <CardTitle>custom voice rules</CardTitle>
+              <CardDescription>
+                define your writing style in your own words
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Example rules */}
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium mb-2">examples:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>always start with a relatable problem</li>
+                  <li>use storytelling format with clear beginning, middle, end</li>
+                  <li>mention specific tools and technologies i use</li>
+                  <li>include metrics when discussing results</li>
+                  <li>show my learning journey, including mistakes</li>
+                </ul>
+              </div>
+
+              {/* Add rule input */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g., always mention specific numbers"
+                  value={newRule}
+                  onChange={(e) => setNewRule(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddRule()}
+                />
+                <Button onClick={handleAddRule} size="sm">add</Button>
+              </div>
+
+              {/* Current rules list */}
+              <div className="space-y-2">
+                {customRules.map((rule, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-muted rounded-md group"
                   >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
-                        config[key] ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-              ))}
+                    <p className="text-sm flex-1">{rule}</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveRule(index)}
+                      className="opacity-0 group-hover:opacity-100 text-xs"
+                    >
+                      remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {customRules.length === 0 && (
+                <p className="text-center text-sm text-muted-foreground py-4">
+                  no custom rules yet. add some to personalize jack&apos;s suggestions
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -202,11 +217,39 @@ export function ToneConfigComponent({ userId, initialConfig }: ToneConfigProps) 
                 </div>
               )}
 
-              {!config.learnedPatterns.avgPostLength && 
+              {config.learnedPatterns.styleNotes && config.learnedPatterns.styleNotes.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-2">style notes</p>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    {config.learnedPatterns.styleNotes.map((note, i) => (
+                      <li key={i}>{note}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {config.learnedPatterns.voiceCharacteristics && config.learnedPatterns.voiceCharacteristics.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-2">voice characteristics</p>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    {config.learnedPatterns.voiceCharacteristics.map((char, i) => (
+                      <li key={i}>{char}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {!config.learnedPatterns.avgPostLength &&
                (!config.learnedPatterns.commonPhrases || config.learnedPatterns.commonPhrases.length === 0) && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-sm">jack is still learning</p>
                   <p className="text-xs mt-1">mark your bangers so jack can study your style</p>
+                </div>
+              )}
+
+              {config.learnedPatterns.lastUpdated && (
+                <div className="text-xs text-muted-foreground mt-4 pt-4 border-t">
+                  last updated: {new Date(config.learnedPatterns.lastUpdated).toLocaleDateString()}
                 </div>
               )}
             </CardContent>

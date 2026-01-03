@@ -3,6 +3,7 @@
  */
 
 import type { IdeaContext, OutlineContext, TrendingTopic, ContentIdea } from './schemas';
+import { getAllCreatorTweets } from '@/lib/db/creator-tweets';
 
 interface UserWithRelations {
   id: string;
@@ -46,8 +47,39 @@ export async function buildIdeaContext(
     noHashtags: true,
     showFailures: true,
     includeNumbers: true,
+    customRules: [],
     learnedPatterns: {},
   };
+
+  // Fetch creator tweets
+  console.log(`[CONTEXT] Fetching creator tweets for user ${user.id} (limit: 50, daysBack: 30)`);
+
+  const creatorTweets = await getAllCreatorTweets(user.id, {
+    limit: 50,
+    daysBack: 30,
+  });
+
+  console.log(`[CONTEXT] Fetched ${creatorTweets.length} creator tweets from database`);
+
+  if (creatorTweets.length > 0) {
+    console.log(`[CONTEXT] Sample tweets:`, creatorTweets.slice(0, 3).map(t => ({
+      author: t.authorHandle,
+      publishedAt: t.publishedAt,
+      contentPreview: t.content.substring(0, 80) + '...',
+      metrics: t.metrics,
+    })));
+  } else {
+    console.warn(`[CONTEXT] No creator tweets found! This may affect idea quality.`);
+  }
+
+  const mappedCreatorTweets = creatorTweets.map((tweet) => ({
+    content: tweet.content,
+    author: tweet.authorHandle,
+    publishedAt: tweet.publishedAt.toISOString(),
+    metrics: tweet.metrics as Record<string, unknown>,
+  }));
+
+  console.log(`[CONTEXT] Mapped ${mappedCreatorTweets.length} tweets for context`);
 
   return {
     topics: trendingTopics,
@@ -58,6 +90,7 @@ export async function buildIdeaContext(
       noHashtags: toneConfig.noHashtags,
       showFailures: toneConfig.showFailures,
       includeNumbers: toneConfig.includeNumbers,
+      customRules: (toneConfig.customRules as string[]) || [],
       learnedPatterns: (toneConfig.learnedPatterns as Record<string, unknown>) || {},
     },
     goodPosts: goodPosts.map((p) => ({
@@ -65,6 +98,7 @@ export async function buildIdeaContext(
       contentPillar: p.contentPillar as 'lessons_learned' | 'helpful_content' | 'build_progress' | 'decisions' | 'promotion',
       format: p.contentType as 'post' | 'thread' | 'long_form',
     })),
+    creatorTweets: mappedCreatorTweets,
   };
 }
 
@@ -82,6 +116,7 @@ export async function buildOutlineContext(
     noHashtags: true,
     showFailures: true,
     includeNumbers: true,
+    customRules: [],
     learnedPatterns: {},
   };
 
@@ -98,6 +133,7 @@ export async function buildOutlineContext(
       noHashtags: toneConfig.noHashtags,
       showFailures: toneConfig.showFailures,
       includeNumbers: toneConfig.includeNumbers,
+      customRules: (toneConfig.customRules as string[]) || [],
       learnedPatterns: (toneConfig.learnedPatterns as Record<string, unknown>) || {},
     },
     goodPosts: goodPosts.map((p) => ({

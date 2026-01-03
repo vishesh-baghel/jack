@@ -9,7 +9,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export type DateRangeOption = '7d' | '15d' | '30d' | 'custom';
+export type DateRangeOption = '24h' | '7d' | '15d' | '30d' | 'custom';
 
 interface DateRangeFilterProps {
   value: DateRangeOption;
@@ -19,6 +19,7 @@ interface DateRangeFilterProps {
 }
 
 const OPTIONS: { value: DateRangeOption; label: string }[] = [
+  { value: '24h', label: 'Past 24 hr' },
   { value: '7d', label: 'Past 7 days' },
   { value: '15d', label: 'Past 15 days' },
   { value: '30d', label: 'Past month' },
@@ -60,7 +61,7 @@ export function DateRangeFilter({
       const end = customEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return `${start} - ${end}`;
     }
-    return OPTIONS.find(opt => opt.value === value)?.label || 'Past 7 days';
+    return OPTIONS.find(opt => opt.value === value)?.label || 'Past 24 hr';
   };
 
   const handleOptionSelect = (option: DateRangeOption) => {
@@ -186,8 +187,11 @@ export function getDateRangeStart(option: DateRangeOption, customStartDate?: Dat
 
   const now = new Date();
   const start = new Date();
-  
+
   switch (option) {
+    case '24h':
+      start.setHours(now.getHours() - 24);
+      break;
     case '7d':
       start.setDate(now.getDate() - 7);
       break;
@@ -200,8 +204,11 @@ export function getDateRangeStart(option: DateRangeOption, customStartDate?: Dat
     default:
       start.setDate(now.getDate() - 7);
   }
-  
-  start.setHours(0, 0, 0, 0);
+
+  // For 24h, keep precise time; for day ranges, reset to midnight
+  if (option !== '24h') {
+    start.setHours(0, 0, 0, 0);
+  }
   return start;
 }
 

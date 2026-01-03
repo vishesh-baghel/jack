@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getOrCreateToneConfig, updateTonePreferences } from '@/lib/db/tone-config';
+import { getOrCreateToneConfig, updateTonePreferences, updateCustomRules } from '@/lib/db/tone-config';
 import { blockGuestWrite } from '@/lib/auth';
 
 const UpdateRequestSchema = z.object({
@@ -17,7 +17,8 @@ const UpdateRequestSchema = z.object({
     noHashtags: z.boolean().optional(),
     showFailures: z.boolean().optional(),
     includeNumbers: z.boolean().optional(),
-  }),
+  }).optional(),
+  customRules: z.array(z.string()).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -53,9 +54,24 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { userId, preferences } = UpdateRequestSchema.parse(body);
+    const { userId, preferences, customRules } = UpdateRequestSchema.parse(body);
 
-    const config = await updateTonePreferences(userId, preferences);
+    let config;
+
+    // Update preferences if provided
+    if (preferences) {
+      config = await updateTonePreferences(userId, preferences);
+    }
+
+    // Update custom rules if provided
+    if (customRules !== undefined) {
+      config = await updateCustomRules(userId, customRules);
+    }
+
+    // If neither was updated, get current config
+    if (!config) {
+      config = await getOrCreateToneConfig(userId);
+    }
 
     return NextResponse.json({
       config,

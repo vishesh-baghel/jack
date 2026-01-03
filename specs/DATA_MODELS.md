@@ -41,6 +41,7 @@ CREATE TABLE users (
   is_guest BOOLEAN DEFAULT false,
   is_owner BOOLEAN DEFAULT false, -- True for the main user (you)
   allow_visitor_mode BOOLEAN DEFAULT false, -- Owner controls guest access
+  daily_tweet_limit INTEGER DEFAULT 50, -- Max tweets to scrape per day across all creators
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -106,8 +107,12 @@ CREATE TABLE creators (
   follower_count INTEGER,
   category TEXT, -- startup_founder, indie_hacker, engineer, cto, influencer
   is_active BOOLEAN DEFAULT true,
+  tweet_count INTEGER DEFAULT 10, -- Desired tweets per day from this creator
+  twitter_user_id TEXT, -- Twitter user ID from validation
+  last_scraped_at TIMESTAMP, -- Last time tweets were scraped
   created_at TIMESTAMP DEFAULT NOW(),
-  
+  updated_at TIMESTAMP DEFAULT NOW(),
+
   UNIQUE(user_id, x_handle)
 );
 
@@ -240,6 +245,10 @@ export type User = {
   email: string;
   name: string | null;
   xHandle: string | null;
+  isGuest: boolean;
+  isOwner: boolean;
+  allowVisitorMode: boolean;
+  dailyTweetLimit: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -294,7 +303,11 @@ export type Creator = {
   followerCount: number | null;
   category: 'startup_founder' | 'indie_hacker' | 'engineer' | 'cto' | 'influencer';
   isActive: boolean;
+  tweetCount: number;
+  twitterUserId: string | null;
+  lastScrapedAt: Date | null;
   createdAt: Date;
+  updatedAt: Date;
 };
 
 export type TrendingTopic = {
@@ -462,7 +475,12 @@ PATCH  /api/posts/[id]/mark-good - Mark post as good for learning
 // Creators
 GET    /api/creators           - Get all tracked creators
 POST   /api/creators           - Add a new creator
+PATCH  /api/creators/[id]      - Update creator (tweet count)
 PATCH  /api/creators/[id]/toggle - Toggle creator active status
+POST   /api/creators/[id]/scrape - Manually trigger scraping for a creator
+
+// Users
+PATCH  /api/users/[id]/settings - Update user settings (daily tweet limit)
 
 // Tone Config
 GET    /api/tone-config        - Get user's tone configuration

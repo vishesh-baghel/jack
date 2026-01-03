@@ -19,6 +19,7 @@ model User {
   isGuest          Boolean  @default(false)
   isOwner          Boolean  @default(false) // True for the main user (you)
   allowVisitorMode Boolean  @default(false) // Allow guest/visitor access
+  dailyTweetLimit  Int      @default(50) // Max tweets to scrape per day across all creators
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -48,18 +49,41 @@ model Project {
 }
 
 model Creator {
-  id        String   @id @default(cuid())
-  userId    String
-  xHandle   String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(cuid())
+  userId        String
+  xHandle       String
+  isActive      Boolean        @default(true)
+  lastScrapedAt DateTime?
+  twitterUserId String?
+  tweetCount    Int            @default(10) // Number of tweets to scrape per day for this creator
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tweets CreatorTweet[]
 
   @@unique([userId, xHandle])
   @@index([userId, isActive])
+  @@index([lastScrapedAt])
   @@map("creators")
+}
+
+model CreatorTweet {
+  id           String   @id @default(cuid())
+  creatorId    String
+  tweetId      String   @unique
+  content      String   @db.Text
+  authorHandle String
+  publishedAt  DateTime
+  metrics      Json
+  scrapedAt    DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  creator Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([creatorId, publishedAt])
+  @@index([scrapedAt])
+  @@map("creator_tweets")
 }
 
 model ToneConfig {
@@ -70,6 +94,7 @@ model ToneConfig {
   noHashtags      Boolean  @default(true)
   showFailures    Boolean  @default(true)
   includeNumbers  Boolean  @default(true)
+  customRules     String[] @default([])
   learnedPatterns Json     @default("{}")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

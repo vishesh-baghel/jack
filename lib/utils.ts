@@ -39,38 +39,22 @@ export function truncate(text: string, length: number): string {
 }
 
 /**
- * Get engagement color based on level
+ * Get engagement color (consistent color for all levels)
  */
 export function getEngagementColor(level: 'low' | 'medium' | 'high'): string {
-  switch (level) {
-    case 'low':
-      return 'bg-gray-100 text-gray-700';
-    case 'medium':
-      return 'bg-yellow-100 text-yellow-700';
-    case 'high':
-      return 'bg-green-100 text-green-700';
-    default:
-      return 'bg-gray-100 text-gray-700';
-  }
+  return 'bg-muted text-foreground';
 }
 
 /**
- * Get pillar color
+ * Get pillar color (consistent color for all pillars)
  */
 export function getPillarColor(pillar: string): string {
-  const colors: Record<string, string> = {
-    engineering: 'bg-blue-100 text-blue-700',
-    career: 'bg-purple-100 text-purple-700',
-    learning: 'bg-green-100 text-green-700',
-    productivity: 'bg-orange-100 text-orange-700',
-    side_projects: 'bg-pink-100 text-pink-700',
-    'side-projects': 'bg-pink-100 text-pink-700',
-    lessons_learned: 'bg-indigo-100 text-indigo-700',
-    helpful_content: 'bg-teal-100 text-teal-700',
-    build_progress: 'bg-cyan-100 text-cyan-700',
-    decisions: 'bg-violet-100 text-violet-700',
-    promotion: 'bg-rose-100 text-rose-700',
-  };
+  return 'bg-muted text-foreground';
+}
 
-  return colors[pillar] || 'bg-gray-100 text-gray-700';
+/**
+ * Format label by converting snake_case and kebab-case to normal text
+ */
+export function formatLabel(text: string): string {
+  return text.replace(/[_-]/g, ' ');
 }

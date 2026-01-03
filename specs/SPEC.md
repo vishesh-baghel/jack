@@ -81,6 +81,11 @@ Jack is an AI agent that reduces content creation time from 50 min to **20 min p
 
 **Content Discovery**
 - Track 50-100 X creators (user-specified)
+- **Dynamic tweet scraping** with per-creator configuration:
+  - Each creator has configurable tweet count (1-100 tweets/day)
+  - Global daily tweet limit (1-1000 tweets across all creators)
+  - Proportional scaling when total requested > daily limit
+  - Minimum 1 tweet per active creator guaranteed
 - Fetch trending topics daily (24h cache)
 - Generate 5 content ideas based on:
   - Trending topics from tracked creators
@@ -101,6 +106,10 @@ Jack is an AI agent that reduces content creation time from 50 min to **20 min p
 
 **Usability**
 - Simple web UI (no calendar, no complexity)
+- **Responsive navigation** with mobile hamburger menu
+  - Desktop (≥768px): horizontal navigation bar
+  - Mobile (<768px): hamburger menu with slide-in drawer
+- Minimalist design matching "jack" aesthetic (no "content agent" subtitle)
 - Save drafts for editing
 - Manual posting (no X API integration)
 
@@ -240,48 +249,64 @@ I want an AI agent that:
 ┌─────────────────────────────────────────────────┐
 │      External Services                          │
 │                                                 │
-│  • Apify ($5/mo)       → X data scraping        │
-│  • OpenAI ($10/mo)     → GPT-4 generation       │
-│  • Neon (Free)         → Postgres database      │
-│  • Langfuse (Free)     → Langfuse tracks observability      │
+│  • TwitterAPI.io (Primary) → Cost-effective scraping ($0.00015/tweet) │
+│  • Apify (Backup)          → Alternative scraper (kept for resilience) │
+│  • OpenAI ($10/mo)         → GPT-4 generation   │
+│  • Neon (Free)             → Postgres database  │
+│  • Langfuse (Free)         → LLM observability  │
 └─────────────────────────────────────────────────┘
 ```
 
 ### Key Design Decisions
 
-1. **No X API (MVP):** X API costs $100/month (Basic tier). Instead:
-   - Use Apify for scraping ($5/month)
-   - Manual posting (copy/paste)
-   - Validate tool usefulness before expensive API
+1. **TwitterAPI.io over Apify (Cost Optimization):**
+   - TwitterAPI.io: $0.00015/tweet (94% cheaper than Apify)
+   - Apify kept as backup for resilience
+   - Generic scraper interface allows easy provider switching
+   - See `docs/TWITTERAPI_IO_INTEGRATION.md` for full details
 
-2. **No Vector DB (MVP):** Simple keyword matching sufficient for 100 creators
+2. **Balanced Tweet Sampling (Idea Quality):**
+   - Fetches tweets evenly across all tracked creators
+   - Prevents bias toward high-frequency posters
+   - Example: 3 creators, 50 tweet limit → ~17 tweets per creator
+   - Shuffles to mix creator perspectives
+   - Ensures diverse content for idea generation
+
+3. **Tweet Cleanup Cron (Cost Optimization):**
+   - Daily cleanup of tweets older than 7 days
+   - Runs at 3 AM UTC (1 hour after scraping)
+   - 98% reduction in database storage vs 90-day retention
+   - Ideas generated daily, older tweets have diminishing value
+   - Helps stay within Neon free tier (500MB limit)
+
+4. **No Vector DB (MVP):** Simple keyword matching sufficient for 100 creators
    - 24-hour cache reduces repeated API calls
    - Can add semantic search later if needed
 
-3. **Single-User SaaS:** Each user deploys their own instance
+5. **Single-User SaaS:** Each user deploys their own instance
    - Simpler MVP (no multi-tenancy)
    - Full data control
    - Lower hosting costs
 
-4. **Postgres over MongoDB:**
+6. **Postgres over MongoDB:**
    - Structured data with relationships
    - JSONB for flexible config
    - Better TypeScript support
    - Free tier sufficient (500MB)
 
-5. **Mastra Embedded (Not Separate Deployment):**
+7. **Mastra Embedded (Not Separate Deployment):**
    - Agent runs in Next.js app (not Mastra Cloud)
    - Simpler: single Vercel deployment
    - Still use Mastra primitives: Memory, Evals, Structured Generation
    - Easier for open source users to deploy
 
-6. **Outline Generation (Not Full Drafts):**
+8. **Outline Generation (Not Full Drafts):**
    - User writes actual content (improve writing skills)
    - AI provides structure and direction
    - Maintains authenticity
    - Not just delegating to AI
 
-7. **Test-Driven Development:**
+9. **Test-Driven Development:**
    - Write tests before implementation
    - Ensures reliability and predictability
    - Easier to refactor and extend

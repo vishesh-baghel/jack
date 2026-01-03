@@ -278,33 +278,77 @@
 └──────────────────────────────────────────────┘
 ```
 
-**Creators Tab:**
+**Creators Tab (Page: `/creators`):**
 ```
 ┌──────────────────────────────────────────────┐
-│  Tracked Creators (87/100)                   │
+│  watchlist                                   │
+│  content creators inspiring your agent       │
 │                                              │
-│  [+ Add Creator]  [Import from List]         │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
 │                                              │
-│  Search: [____________]  Filter: [All ▾]     │
+│  daily tweet budget                          │
+│  maximum tweets to scrape per day across     │
+│  all creators                                │
+│                                              │
+│  tweets per day                              │
+│  [____50____]  [save]                        │
+│                                              │
+│  total requested: 30/50                      │
+│  ✓ within budget - no scaling needed        │
+│                                              │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│                                              │
+│  actively stalking 2                         │
+│                                              │
+│  [+ track new creator]                       │
 │                                              │
 │  ┌────────────────────────────────────────┐ │
-│  │ @levelsio                              │ │
-│  │ Indie Hacker · 500K followers          │ │
-│  │ Last fetched: 2 hours ago              │ │
-│  │                      [✓ Active] [✗]    │ │
+│  │ ● @levelsio                            │ │
+│  │   added 2 days ago                     │ │
+│  │                                        │ │
+│  │   (scaled to 7)  [10] tweets           │ │
+│  │                      [chill] [yeet]    │ │
 │  └────────────────────────────────────────┘ │
 │                                              │
 │  ┌────────────────────────────────────────┐ │
-│  │ @swyx                                  │ │
-│  │ Tech Influencer · 150K followers       │ │
-│  │ Last fetched: 2 hours ago              │ │
-│  │                      [✓ Active] [✗]    │ │
+│  │ ● @swyx                                │ │
+│  │   added 2 days ago                     │ │
+│  │                                        │ │
+│  │   (scaled to 14) [20] tweets [save]   │ │
+│  │                      [chill] [yeet]    │ │
 │  └────────────────────────────────────────┘ │
-│                                              │
-│  [+85 More]                                  │
 │                                              │
 └──────────────────────────────────────────────┘
 ```
+
+**Tweet Count Behavior:**
+- Each creator has configurable tweet count (1-100 tweets/day)
+- Number input shows requested tweets
+- "save" button appears only when value changes
+- When total requested > daily limit: proportional scaling applies
+- Scaling message "(scaled to X)" shown LEFT of input when active
+- Amber color indicates proportional scaling is active
+
+**Daily Budget:**
+- Global limit controls max tweets/day across all creators
+- Range: 1-1000 tweets
+- Live calculation shows: `total requested / daily limit`
+- Visual indicators:
+  - Green ✓ "within budget" when under limit
+  - Amber ⚠ "proportional scaling active" when exceeding limit
+
+**Proportional Scaling Example:**
+- User A requests 40 tweets, User B requests 30 tweets (Total: 70)
+- Daily limit: 50 tweets
+- Scaling factor: 50/70 = 0.714
+- User A gets: floor(40 × 0.714) = 28 tweets
+- User B gets: floor(30 × 0.714) = 21 tweets
+- Minimum 1 tweet per active creator guaranteed
+
+**Creator Actions:**
+- **chill:** Pause creator (toggle isActive = false)
+- **yeet:** Delete creator with confirmation
+- Green dot = active, Gray dot = paused
 
 ---
 
@@ -529,15 +573,34 @@ export function TweetEditor({
 
 **Breakpoints:**
 - `sm:` 640px - Stack idea cards
-- `md:` 768px - Side navigation appears
+- `md:` 768px (768px+) - Desktop navigation appears
 - `lg:` 1024px - Optimal desktop view
 - `xl:` 1280px - Max width container
 
+**Navigation Responsive Behavior:**
+
+**Desktop (≥768px):**
+```
+┌────────────────────────────────────────────────┐
+│ jack  visitor mode  ideas  posts  creators  settings  [logout] │
+└────────────────────────────────────────────────┘
+```
+
+**Mobile (<768px):**
+```
+┌────────────────────────────────────────────────┐
+│ jack  visitor mode                      [☰]    │
+└────────────────────────────────────────────────┘
+```
+
+Clicking hamburger opens slide-in sheet from right with all nav links.
+
 **Mobile Adjustments:**
-- Hamburger menu for navigation
+- Hamburger menu for navigation (< 768px)
 - Single column layout
 - Smaller cards
 - Bottom sheet for draft editor
+- Touch-optimized button sizes
 
 ---
 

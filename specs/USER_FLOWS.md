@@ -863,3 +863,185 @@ Visitor mode is **owner-controlled**. By default, it's disabled on first deploym
 - **Security:** No guest can modify owner's data
 
 ---
+
+## Flow 13: Configure Tweet Scraping (Dynamic Tweet Limits)
+
+**Actor:** Vishesh (Owner)
+**Goal:** Control how many tweets to scrape from each creator
+**Time:** 2-3 minutes
+
+### Context
+
+User wants to control the "influence" of different creators on their content ideas by adjusting how many tweets to scrape from each.
+
+- Creator A posts valuable long-form threads → want 20 tweets/day
+- Creator B posts frequently but only occasional gems → want 5 tweets/day
+- Global limit prevents excessive API costs
+
+### Steps
+
+**Navigate to Creators Page**
+```
+1. Click "creators" in navigation
+2. See list of tracked creators
+3. See "daily tweet budget" card at top
+4. Shows: "total requested: 30/50"
+5. Green indicator: "✓ within budget - no scaling needed"
+```
+
+**Adjust Global Daily Limit**
+```
+6. See current daily limit: 50 tweets
+7. Click on input field, change to 100
+8. "save" button appears next to input
+9. Click "save"
+10. Loading state: "saving..."
+11. Success toast: "daily limit updated"
+12. Button disappears, value saved
+```
+
+**Configure Per-Creator Tweet Count**
+```
+13. Scroll to creator: @levelsio
+14. See current value: 10 tweets
+15. Change input to 20 tweets
+16. "save" button appears to the right
+17. Click "save"
+18. Loading state: "saving..."
+19. Success toast: "tweet count updated"
+20. New value persists
+```
+
+**Observe Proportional Scaling**
+```
+21. Configure multiple creators:
+    - @levelsio: 40 tweets
+    - @swyx: 30 tweets
+    - @Naval: 25 tweets
+    - Total: 95 tweets
+22. Daily limit: 50 tweets
+23. Amber warning appears: "⚠ proportional scaling active (53% per creator)"
+24. See scaled values beside each input:
+    - @levelsio: "(scaled to 21)" 40 tweets
+    - @swyx: "(scaled to 16)" 30 tweets
+    - @Naval: "(scaled to 13)" 25 tweets
+25. Total scraped will be: 50 tweets (not 95)
+```
+
+**Understanding Scaling Algorithm**
+```
+26. System calculates:
+    - Total requested: 95 tweets
+    - Daily limit: 50 tweets
+    - Scaling factor: 50/95 = 0.526
+    - Each creator gets: floor(requested × 0.526)
+    - Minimum 1 tweet per active creator guaranteed
+27. Actual scraping uses scaled values
+28. User sees both requested and actual values
+```
+
+**Pause Creator to Remove from Scaling**
+```
+29. Click "chill" button on @Naval
+30. Creator marked inactive (gray dot)
+31. Tweet count input disappears
+32. Recalculation:
+    - New total: 70 tweets (40 + 30)
+    - Daily limit: 50 tweets
+    - New scaling factor: 50/70 = 0.714
+    - @levelsio: floor(40 × 0.714) = 28 tweets
+    - @swyx: floor(30 × 0.714) = 21 tweets
+33. Scaling message updates with new percentages
+```
+
+**Re-activate Creator**
+```
+34. Click "chill" again on @Naval
+35. Creator marked active (green dot)
+36. Tweet count input reappears with saved value (25)
+37. Scaling recalculates back to 95 total
+```
+
+### Technical Implementation
+
+**Backend (Cron Job)**
+```
+1. Daily cron runs at scheduled time
+2. For each user:
+   a. Fetch user's dailyTweetLimit from DB
+   b. Fetch all active creators with tweetCount
+   c. Calculate total requested tweets
+   d. If total > dailyLimit:
+      - Calculate scaling factor: dailyLimit / total
+      - Apply to each creator: actualCount = max(1, floor(requested × factor))
+   e. For each creator:
+      - Scrape actualCount tweets using Twitter API/Apify
+      - Store in database
+      - Update lastScrapedAt timestamp
+3. Use scraped tweets for trend analysis
+4. Generate content ideas based on scraped content
+```
+
+**API Endpoints**
+```
+PATCH /api/users/[id]/settings
+Body: { dailyTweetLimit: 100 }
+Validation: Min 1, Max 1000
+
+PATCH /api/creators/[id]
+Body: { tweetCount: 20 }
+Validation: Min 1, Max 100
+```
+
+**UX Details**
+```
+- Pending state pattern: save button only appears when value changes
+- Instant UI feedback: no API call on every keystroke
+- Live calculation: total and scaling updates in real-time
+- Color indicators:
+  - Green ✓ = within budget
+  - Amber ⚠ = proportional scaling active
+- Scaling message placement: LEFT of input (not right)
+```
+
+### Edge Cases
+
+**All Creators Paused**
+```
+1. User clicks "chill" on all creators
+2. No active creators
+3. Total requested: 0 tweets
+4. Message: "no active creators to scrape"
+5. Scraping skipped in cron job
+```
+
+**Single Creator Requesting More Than Limit**
+```
+1. User has 1 active creator: @levelsio
+2. Requests: 100 tweets
+3. Daily limit: 50 tweets
+4. Scaling applies: actualCount = 50 tweets
+5. Shows: "(scaled to 50)" 100 tweets
+```
+
+**Minimum Tweet Guarantee**
+```
+1. User has 10 active creators
+2. Each requests: 10 tweets (Total: 100)
+3. Daily limit: 5 tweets
+4. Scaling factor: 5/100 = 0.05
+5. Normal calculation: 10 × 0.05 = 0.5 → floor = 0
+6. Minimum guarantee kicks in: max(1, 0) = 1
+7. Each creator gets: 1 tweet
+8. Total scraped: 10 tweets (exceeds limit for fairness)
+```
+
+### Success Metrics
+
+- **Configuration time:** < 3 minutes to adjust all creator tweet counts
+- **Understanding:** User immediately sees scaling impact in UI
+- **API cost control:** Total tweets scraped never significantly exceeds daily limit (except minimum guarantee edge case)
+- **Fairness:** All active creators get at least 1 tweet
+- **Predictability:** Scaling calculation is transparent and consistent
+
+---

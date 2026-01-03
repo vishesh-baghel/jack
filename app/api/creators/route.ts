@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getActiveCreators, addCreator } from '@/lib/db/creators';
 import { blockGuestWrite } from '@/lib/auth';
+import { validateTwitterHandle, scrapeTwitterUser } from '@/lib/apify/twitter-scraper';
+import { storeCreatorTweets } from '@/lib/db/creator-tweets';
 
 const CreateRequestSchema = z.object({
   userId: z.string(),
@@ -53,7 +55,20 @@ export async function POST(request: NextRequest) {
     // Ensure handle starts with @
     const normalizedHandle = xHandle.startsWith('@') ? xHandle : `@${xHandle}`;
 
-    const creator = await addCreator(userId, normalizedHandle);
+    // Validate Twitter handle
+    const validation = await validateTwitterHandle(normalizedHandle);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error || 'Invalid Twitter handle' },
+        { status: 400 }
+      );
+    }
+
+    // Create/reactivate creator
+    const creator = await addCreator(userId, normalizedHandle, validation.userId);
+
+    // Trigger background scrape (fire-and-forget)
+    scrapeAndStoreCreatorTweets(creator.id, normalizedHandle);
 
     return NextResponse.json({
       creator,
@@ -72,5 +87,19 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to add creator' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Background function to scrape and store tweets
+ */
+async function scrapeAndStoreCreatorTweets(creatorId: string, handle: string) {
+  try {
+    console.log(`[CREATOR] Initiating background scrape for ${handle}`);
+    const tweets = await scrapeTwitterUser(handle);
+    await storeCreatorTweets(creatorId, tweets);
+    console.log(`[CREATOR] Stored ${tweets.length} tweets for ${handle}`);
+  } catch (error) {
+    console.error(`[CREATOR] Failed to scrape tweets for ${handle}:`, error);
   }
 }

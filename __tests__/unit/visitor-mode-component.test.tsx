@@ -6,6 +6,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+// Mock toast
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+import { toast } from 'sonner';
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -89,23 +99,22 @@ describe('VisitorModeToggle Component', () => {
     expect(screen.queryByText('active')).not.toBeInTheDocument();
   });
 
-  it('should display guest access URL when enabled', async () => {
+  it('should not display guest access URL when enabled', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ enabled: true }),
     });
 
-    // Mock window.location
-    delete (window as never).location;
-    window.location = { origin: 'http://localhost:3000' } as never;
-
     const { VisitorModeToggle } = await import('@/components/visitor-mode-toggle');
     render(<VisitorModeToggle isOwner={true} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/guest access url/i)).toBeInTheDocument();
-      expect(screen.getByText(/http:\/\/localhost:3000\/auth/)).toBeInTheDocument();
+      expect(screen.getByText(/visitor mode is on/i)).toBeInTheDocument();
     });
+
+    // Guest access URL section should not be displayed
+    expect(screen.queryByText(/guest access url/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/continue as guest/i)).not.toBeInTheDocument();
   });
 
   it('should toggle visitor mode when clicked', async () => {
@@ -146,9 +155,6 @@ describe('VisitorModeToggle Component', () => {
   });
 
   it('should show error alert when toggle fails', async () => {
-    // Mock window.alert
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
     mockFetch
       .mockResolvedValueOnce({
         ok: true,
@@ -170,10 +176,8 @@ describe('VisitorModeToggle Component', () => {
     fireEvent.click(toggleButton);
 
     await waitFor(() => {
-      expect(alertMock).toHaveBeenCalledWith('Toggle failed');
+      expect(toast.error).toHaveBeenCalledWith('Toggle failed');
     });
-
-    alertMock.mockRestore();
   });
 
   it('should disable toggle button while saving', async () => {

@@ -7,6 +7,7 @@ import { ToneConfigComponent } from '@/components/tone-config';
 import { VisitorModeToggle } from '@/components/visitor-mode-toggle';
 import { getCurrentUserId, getDataUserId } from '@/lib/auth';
 import { prisma } from '@/lib/db/client';
+import { getOrCreateToneConfig } from '@/lib/db/tone-config';
 
 export default async function SettingsPage() {
   const userId = await getCurrentUserId();
@@ -26,6 +27,24 @@ export default async function SettingsPage() {
 
   const isOwner = user?.isOwner ?? false;
 
+  // Fetch tone config for the data user
+  const toneConfig = await getOrCreateToneConfig(dataUserId);
+
+  // Transform Prisma type to component type
+  const configForComponent = {
+    ...toneConfig,
+    learnedPatterns: (toneConfig.learnedPatterns || {}) as {
+      avgPostLength?: number;
+      commonPhrases?: string[];
+      showFailures?: boolean;
+      includeNumbers?: boolean;
+      successfulPillars?: string[];
+      styleNotes?: string[];
+      voiceCharacteristics?: string[];
+      lastUpdated?: string;
+    },
+  };
+
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="space-y-6">
@@ -33,7 +52,7 @@ export default async function SettingsPage() {
         {isOwner && <VisitorModeToggle isOwner={isOwner} />}
 
         {/* Tone config for everyone */}
-        <ToneConfigComponent userId={dataUserId} />
+        <ToneConfigComponent userId={dataUserId} initialConfig={configForComponent} />
       </div>
     </main>
   );

@@ -8,9 +8,16 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Lightbulb, FileText, Users, Settings, LogOut, Eye } from 'lucide-react';
+import { Lightbulb, FileText, Users, Settings, LogOut, Eye, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { getUserSession, clearUserSession } from '@/lib/auth-client';
 
 const navItems = [
@@ -25,6 +32,7 @@ export function Navigation() {
   const router = useRouter();
   const [isGuest, setIsGuest] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkGuestStatus = () => {
@@ -73,7 +81,6 @@ export function Navigation() {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
               <span className="text-2xl font-bold">jack</span>
-              <span className="text-xs text-muted-foreground">your ai ghostwriter</span>
             </Link>
             {/* Visitor Mode Indicator */}
             {isGuest && (
@@ -84,8 +91,8 @@ export function Navigation() {
             )}
           </div>
 
-          {/* Nav Links */}
-          <div className="flex items-center gap-1">
+          {/* Nav Links - Desktop */}
+          <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -118,6 +125,55 @@ export function Navigation() {
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Mobile Menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="md:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <SheetHeader>
+                <SheetTitle>navigation</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-2 mt-6">
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 px-4 py-3 text-base font-medium rounded-md transition-colors',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-3 px-4 py-3 text-base font-medium justify-start text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-5 w-5" />
+                  logout
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>

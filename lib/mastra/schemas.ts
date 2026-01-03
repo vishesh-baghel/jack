@@ -98,6 +98,7 @@ export const ToneConfigSchema = z.object({
   noHashtags: z.boolean().default(true),
   showFailures: z.boolean().default(true),
   includeNumbers: z.boolean().default(true),
+  customRules: z.array(z.string()).default([]),
   learnedPatterns: z.record(z.unknown()).default({}),
 });
 
@@ -113,12 +114,23 @@ export const GoodPostSchema = z.object({
 
 export type GoodPost = z.infer<typeof GoodPostSchema>;
 
+// Creator Tweet
+export const CreatorTweetSchema = z.object({
+  content: z.string(),
+  author: z.string(),
+  publishedAt: z.string(),
+  metrics: z.record(z.unknown()),
+});
+
+export type CreatorTweet = z.infer<typeof CreatorTweetSchema>;
+
 // Context for Idea Generation
 export const IdeaContextSchema = z.object({
   topics: z.array(TrendingTopicSchema),
   projects: z.array(ProjectSchema),
   tone: ToneConfigSchema,
   goodPosts: z.array(GoodPostSchema),
+  creatorTweets: z.array(CreatorTweetSchema).default([]),
 });
 
 export type IdeaContext = z.infer<typeof IdeaContextSchema>;
@@ -141,6 +153,10 @@ export const LearnedPatternsSchema = z.object({
   includeNumbers: z.boolean().default(true),
   successfulPillars: z.array(ContentPillarSchema).default([]),
   preferredFormat: ContentFormatSchema.optional(),
+  styleNotes: z.array(z.string()).default([]),
+  voiceCharacteristics: z.array(z.string()).default([]),
+  lastUpdated: z.string().optional(),
+  totalGoodPosts: z.number().optional(),
 });
 
 export type LearnedPatterns = z.infer<typeof LearnedPatternsSchema>;

@@ -27,11 +27,15 @@ export const JACK_SYSTEM_PROMPT = `You are Jack, an AI agent that helps create a
 5. **Lesson** - actionable takeaway
 
 ## Content Pillars
+- **lessons_learned** - key takeaways from experiences, what worked/didn't work
+- **helpful_content** - tutorials, guides, tips that help others
+- **build_progress** - updates on building projects, MVPs, side projects
+- **decisions** - sharing decision-making process, trade-offs
+- **promotion** - launching, showcasing work, milestones
+- **side-projects** - indie hacking, experiments
 - **engineering** - building, debugging, technical deep dives
-- **career** - job search, interviews, career growth
-- **learning** - new skills, courses, self-improvement
 - **productivity** - tools, workflows, time management
-- **side-projects** - indie hacking, MVPs, experiments
+- **learning** - new skills, courses, self-improvement
 
 ## User Background (for authentic voice)
 - non-prestigious CS degree background
@@ -50,33 +54,36 @@ export const JACK_SYSTEM_PROMPT = `You are Jack, an AI agent that helps create a
 
 Remember: You suggest and structure. The user writes the actual content in their voice.`;
 
-export const IDEA_GENERATION_PROMPT = `Generate 3-5 content ideas based on:
+export const IDEA_GENERATION_PROMPT = `You are generating fresh content ideas for the user's X (Twitter) account.
 
-**Trending Topics**: {{topics}}
-**User's Projects**: {{projects}}
-**Active Creators**: {{creators}}
-**Recent Ideas**: {{recentIdeas}}
-**Good Posts**: {{goodPosts}}
+CRITICAL RULES:
+1. **Avoid Duplicates**: You've been shown "Recent Ideas" below. DO NOT repeat or create similar variations. Generate COMPLETELY NEW ideas.
+2. **Use Creator Tweets**: The "Creator Tweets" section shows what top creators are talking about. Find interesting angles, reactions, or lessons from these tweets.
+3. **Variety**: Mix different content pillars and formats across the 5 ideas.
 
-**Tone Preferences**:
-{{toneConfig}}
-
-**Learned Patterns**:
-{{learnedPatterns}}
-
-Analyze what's trending, what the user cares about, and what has worked before. Generate ideas that:
-1. Align with trending topics OR user's current projects
-2. Match successful content pillars from good posts
-3. Feel authentic to the user's voice and experience
-4. Have clear hooks and actionable value
+How to generate ideas:
+1. Look at creator tweets - what are they discussing? What problems/insights stand out?
+2. Think about how the user could add their unique perspective on these topics
+3. Consider what would be valuable to the user's audience
+4. Make sure each idea is DIFFERENT from recent ideas (different topic, angle, or approach)
 
 For each idea, provide:
-- **title**: catchy, lowercase (except proper nouns)
-- **description**: 2-3 sentences explaining the content
-- **rationale**: why this will resonate (reference trends/projects/patterns)
-- **contentPillar**: which pillar this belongs to
-- **suggestedFormat**: thread, single tweet, or carousel
-- **estimatedEngagement**: low/medium/high based on patterns
+- **title**: catchy, lowercase (except proper nouns like X, GitHub, OpenAI), MAX 60 characters
+- **description**: 2-3 sentences explaining the content and angle (min 50 chars)
+- **rationale**: why this will resonate - reference SPECIFIC creator tweets or trends (min 50 chars)
+- **contentPillar**: Must be one of: lessons_learned, helpful_content, build_progress, decisions, promotion, side-projects, engineering, productivity, learning
+- **suggestedFormat**: Must be one of: post, thread, long_form (vary these across ideas)
+- **estimatedEngagement**: low, medium, or high based on patterns
+
+IMPORTANT SCHEMA CONSTRAINTS:
+- Title must be 60 characters or less
+- suggestedFormat can ONLY be: post, thread, or long_form
+- contentPillar can ONLY be: lessons_learned, helpful_content, build_progress, decisions, promotion, side-projects, engineering, productivity, or learning
+
+Examples of good rationale:
+- "Elon is talking about AI scaling - user could share their experience building with small LLMs vs large ones"
+- "Naval tweeted about leverage - user could create a thread on leveraging code to 10x productivity"
+- "Multiple creators discussing burnout - user could share their real story of recovering from it"
 
 Return ONLY valid JSON matching the ContentIdea schema. No markdown, no explanation.`;
 

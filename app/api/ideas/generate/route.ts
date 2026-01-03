@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, trendingTopics } = RequestSchema.parse(body);
 
+    console.log(`[IDEA_GEN] Starting idea generation for user ${userId}`);
+
     // Fetch user data with relations
     const user = await getUserWithRelations(userId);
     if (!user) {
@@ -35,14 +37,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log(`[IDEA_GEN] User data fetched:`, {
+      userId: user.id,
+      projectsCount: user.projects?.length || 0,
+      creatorsCount: user.creators?.length || 0,
+      activeCreators: user.creators?.filter(c => c.isActive).map(c => c.xHandle) || [],
+      hasToneConfig: !!user.toneConfig,
+    });
+
     // Get good posts for learning
     const goodPosts = await getGoodPostsForLearning(userId, 10);
+    console.log(`[IDEA_GEN] Fetched ${goodPosts.length} good posts for learning`);
 
     // Get recent ideas for context
     const recentIdeas = await getRecentIdeas(userId);
+    console.log(`[IDEA_GEN] Fetched ${recentIdeas.length} recent ideas`);
 
     // Build context
     const context = await buildIdeaContext(user, trendingTopics, goodPosts);
+
+    console.log(`[IDEA_GEN] Context built:`, {
+      topicsCount: context.topics.length,
+      projectsCount: context.projects.length,
+      goodPostsCount: context.goodPosts.length,
+      creatorTweetsCount: context.creatorTweets?.length || 0,
+      creatorTweetsSample: context.creatorTweets?.slice(0, 3).map(t => ({
+        author: t.author,
+        contentPreview: t.content.substring(0, 50) + '...',
+      })) || [],
+    });
 
     // Generate ideas using agent
     const ideas = await generateIdeas(userId, context, recentIdeas);

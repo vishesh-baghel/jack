@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { markPostAsGood } from '@/lib/db/posts';
 import { blockGuestWrite } from '@/lib/auth';
+import { triggerPatternLearning } from '@/lib/db/pattern-learning';
+import { prisma } from '@/lib/db/client';
 
 export async function PATCH(
   request: NextRequest,
@@ -27,8 +29,21 @@ export async function PATCH(
 
     const updatedPost = await markPostAsGood(id);
 
+    // Trigger pattern learning (fire-and-forget)
+    const post = await prisma.post.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+
+    if (post) {
+      triggerPatternLearning(post.userId).catch((error) => {
+        console.error('Failed to trigger pattern learning:', error);
+      });
+    }
+
     return NextResponse.json({
       post: updatedPost,
+      learningTriggered: !!post,
     });
   } catch (error) {
     console.error('Error marking post as good:', error);

@@ -11,8 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { GuestTooltipButton } from '@/components/guest-tooltip-button';
 import { DateRangeFilter } from '@/components/date-range-filter';
+import { Pagination } from '@/components/pagination';
 import { useDateRangeFilter } from '@/hooks/use-date-range-filter';
-import { formatRelativeTime, getPillarColor, getEngagementColor } from '@/lib/utils';
+import { usePagination } from '@/hooks/use-pagination';
+import { formatRelativeTime, getPillarColor, getEngagementColor, formatLabel } from '@/lib/utils';
 import { getUserSession } from '@/lib/auth-client';
 
 interface Outline {
@@ -143,12 +145,27 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
   // Filter by status and date range
   const filteredIdeas = ideas.filter(idea => {
     if (idea.status !== selectedStatus) return false;
-    
+
     const ideaDate = new Date(idea.createdAt);
     const startDate = getStartDate();
     const endDate = getEndDate();
-    
+
     return ideaDate >= startDate && ideaDate <= endDate;
+  });
+
+  // Pagination - reset when status or date range changes
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedIdeas,
+    nextPage,
+    prevPage,
+    hasNextPage,
+    hasPrevPage,
+  } = usePagination({
+    items: filteredIdeas,
+    itemsPerPage: 9,
+    resetDependencies: [selectedStatus, dateRange, customStartDate, customEndDate],
   });
 
   return (
@@ -190,17 +207,27 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
             </button>
           ))}
         </div>
-        <DateRangeFilter
-          value={dateRange}
-          onChange={handleDateRangeChange}
-          customStartDate={customStartDate}
-          customEndDate={customEndDate}
-        />
+        <div className="flex items-center gap-3">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrevPage={prevPage}
+            onNextPage={nextPage}
+            hasPrevPage={hasPrevPage}
+            hasNextPage={hasNextPage}
+          />
+          <DateRangeFilter
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            customStartDate={customStartDate}
+            customEndDate={customEndDate}
+          />
+        </div>
       </div>
 
       {/* Ideas Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredIdeas.map((idea) => (
+        {paginatedIdeas.map((idea) => (
           <Card key={idea.id} className="flex flex-col">
             <CardHeader>
               <CardTitle className="text-lg">{idea.title}</CardTitle>
@@ -219,10 +246,10 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
                 {/* Tags row */}
                 <div className="flex flex-wrap items-center gap-2 pt-4">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getPillarColor(idea.contentPillar)}`}>
-                    {idea.contentPillar.replace(/_/g, ' ')}
+                    {formatLabel(idea.contentPillar)}
                   </span>
                   <span className="text-xs px-2.5 py-1 rounded-full bg-muted font-medium">
-                    {idea.suggestedFormat}
+                    {formatLabel(idea.suggestedFormat)}
                   </span>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getEngagementColor(idea.estimatedEngagement)}`}>
                     {idea.estimatedEngagement} engagement

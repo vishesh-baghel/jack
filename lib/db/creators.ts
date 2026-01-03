@@ -7,7 +7,7 @@ import { prisma } from './client';
 /**
  * Add a creator to track
  */
-export async function addCreator(userId: string, xHandle: string) {
+export async function addCreator(userId: string, xHandle: string, twitterUserId?: string) {
   return prisma.creator.upsert({
     where: {
       userId_xHandle: {
@@ -17,11 +17,13 @@ export async function addCreator(userId: string, xHandle: string) {
     },
     update: {
       isActive: true,
+      twitterUserId: twitterUserId || undefined,
     },
     create: {
       userId,
       xHandle,
       isActive: true,
+      twitterUserId: twitterUserId || undefined,
     },
   });
 }
@@ -67,5 +69,15 @@ export async function toggleCreatorStatus(creatorId: string) {
 export async function removeCreator(creatorId: string) {
   return prisma.creator.delete({
     where: { id: creatorId },
+  });
+}
+
+/**
+ * Get all creators (including inactive) for a user
+ */
+export async function getAllCreators(userId: string) {
+  return prisma.creator.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
   });
 }

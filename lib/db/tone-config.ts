@@ -64,3 +64,13 @@ export async function updateTonePreferences(
     data: preferences,
   });
 }
+
+/**
+ * Update custom voice rules
+ */
+export async function updateCustomRules(userId: string, rules: string[]) {
+  return prisma.toneConfig.update({
+    where: { userId },
+    data: { customRules: rules },
+  });
+}
