@@ -11,15 +11,23 @@ import { storeCreatorTweets, getCreatorsNeedingScraping } from '@/lib/db/creator
 import { calculateScaledTweetCounts } from '@/lib/utils/tweet-scaling';
 
 export async function GET(request: NextRequest) {
-  // Verify CRON_SECRET authorization
+  // Verify Vercel Cron authentication
+  // Vercel automatically sends: Authorization: Bearer {CRON_SECRET}
   const authHeader = request.headers.get('authorization');
-  const expectedAuth = process.env.CRON_SECRET
-    ? `Bearer ${process.env.CRON_SECRET}`
-    : null;
+  const cronSecret = process.env.CRON_SECRET;
 
-  if (!expectedAuth || authHeader !== expectedAuth) {
+  if (!cronSecret) {
+    console.error('[CRON AUTH] CRON_SECRET environment variable not set');
     return NextResponse.json(
-      { error: 'Unauthorized. Invalid cron secret.' },
+      { error: 'Server configuration error: CRON_SECRET not configured' },
+      { status: 500 }
+    );
+  }
+
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    console.error('[CRON AUTH] Invalid or missing authorization header');
+    return NextResponse.json(
+      { error: 'Unauthorized. Invalid CRON_SECRET.' },
       { status: 401 }
     );
   }
