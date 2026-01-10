@@ -75,6 +75,7 @@ Jack is an AI agent that reduces content creation time from 50 min to **20 min p
 
 ---
 
+
 ## Goals & Non-Goals
 
 ### V1 (MVP - 4 weeks)
