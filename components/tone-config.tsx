@@ -90,19 +90,10 @@ export function ToneConfigComponent({ userId, initialConfig }: ToneConfigProps) 
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">settings</h1>
-        <p className="text-muted-foreground">
-          see how i&apos;ve configured my writing style and voice
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2">
         {/* Custom Voice Rules */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">your voice settings</h2>
+          <h2 className="text-lg sm:text-xl font-semibold">your voice settings</h2>
           <Card>
             <CardHeader>
               <CardTitle>custom voice rules</CardTitle>
@@ -124,14 +115,15 @@ export function ToneConfigComponent({ userId, initialConfig }: ToneConfigProps) 
               </div>
 
               {/* Add rule input */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   placeholder="e.g., always mention specific numbers"
                   value={newRule}
                   onChange={(e) => setNewRule(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddRule()}
+                  className="flex-1"
                 />
-                <Button onClick={handleAddRule} size="sm">add</Button>
+                <Button onClick={handleAddRule} size="sm" className="w-full sm:w-auto">add</Button>
               </div>
 
               {/* Current rules list */}
@@ -169,7 +161,7 @@ export function ToneConfigComponent({ userId, initialConfig }: ToneConfigProps) 
 
         {/* Learned Patterns */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">what jack learned</h2>
+          <h2 className="text-lg sm:text-xl font-semibold">what jack learned</h2>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">from your bangers</CardTitle>
@@ -256,6 +248,5 @@ export function ToneConfigComponent({ userId, initialConfig }: ToneConfigProps) 
           </Card>
         </div>
       </div>
-    </div>
   );
 }

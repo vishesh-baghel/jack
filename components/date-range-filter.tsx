@@ -102,11 +102,11 @@ export function DateRangeFilter({
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="min-w-[140px] justify-between gap-2"
+        className="min-w-[120px] justify-between gap-2 text-xs sm:text-sm whitespace-nowrap"
       >
         <span className="truncate">{getDisplayLabel()}</span>
         <svg
-          className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -116,14 +116,14 @@ export function DateRangeFilter({
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] bg-background border rounded-md shadow-lg">
+        <div className="absolute right-0 top-full mt-1 z-50 w-[min(240px,calc(100vw-2rem))] bg-background border rounded-md shadow-lg">
           {!showCustomInputs ? (
             <div className="py-1">
               {OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleOptionSelect(option.value)}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-muted cursor-pointer transition-colors ${
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-muted cursor-pointer transition-colors ${
                     value === option.value ? 'bg-muted/50 font-medium' : ''
                   }`}
                 >
@@ -132,8 +132,8 @@ export function DateRangeFilter({
               ))}
             </div>
           ) : (
-            <div className="p-3 space-y-3">
-              <div className="space-y-2">
+            <div className="p-2.5 space-y-2.5">
+              <div className="space-y-1.5">
                 <label className="text-xs text-muted-foreground">Start date</label>
                 <Input
                   type="date"
@@ -142,7 +142,7 @@ export function DateRangeFilter({
                   className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-xs text-muted-foreground">End date</label>
                 <Input
                   type="date"
@@ -151,7 +151,7 @@ export function DateRangeFilter({
                   className="h-8 text-sm"
                 />
               </div>
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-1">
                 <Button
                   variant="ghost"
                   size="sm"

@@ -60,14 +60,14 @@ export function OutlineViewer({
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] overflow-hidden flex flex-col">
+    <div className="min-h-[calc(100vh-120px)] lg:h-[calc(100vh-120px)] overflow-hidden flex flex-col">
       {/* Header */}
       <div className="flex-shrink-0 pb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <h1 className="text-3xl font-bold">{ideaTitle}</h1>
-          <Badge>{contentPillar}</Badge>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold">{ideaTitle}</h1>
+          <Badge className="w-fit">{contentPillar}</Badge>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           format: {outline.format} • estimated length: {outline.estimatedLength} chars
         </p>
       </div>
@@ -131,10 +131,10 @@ export function OutlineViewer({
         </div>
 
         {/* Writing Panel */}
-        <div className="flex flex-col gap-4 overflow-hidden">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">write your content</h2>
-            <span className="text-sm text-muted-foreground">
+        <div className="flex flex-col gap-4 overflow-hidden mt-6 lg:mt-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold">write your content</h2>
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {draftContent.length} / {outline.estimatedLength} chars
             </span>
           </div>

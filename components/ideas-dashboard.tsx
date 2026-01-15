@@ -171,11 +171,11 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">content ideas</h1>
-          <p className="text-muted-foreground">
-            {isGuest 
+          <h1 className="text-2xl sm:text-3xl font-bold">content ideas</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {isGuest
               ? "see what ideas i'm working with before they hit the timeline"
               : "ai-generated bangers based on your voice. the algorithm will thank you"
             }
@@ -185,19 +185,20 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
           onClick={handleGenerateIdeas}
           disabled={isGenerating}
           isGuest={isGuest}
+          className="w-full sm:w-auto"
         >
           {isGenerating ? 'cooking...' : 'cook up ideas'}
         </GuestTooltipButton>
       </div>
 
       {/* Status Tabs and Date Filter */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex gap-1 p-1 bg-muted/50 rounded-lg w-fit">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex gap-1 p-1 bg-muted/50 rounded-lg w-full sm:w-fit overflow-x-auto">
           {(['suggested', 'accepted', 'rejected', 'used'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 cursor-pointer whitespace-nowrap ${
                 selectedStatus === status
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
@@ -207,7 +208,7 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-2">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

@@ -48,6 +48,14 @@ export default async function SettingsPage() {
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="space-y-6">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">settings</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            see how i&apos;ve configured my writing style and voice
+          </p>
+        </div>
+
         {/* Show visitor mode toggle only to owner */}
         {isOwner && <VisitorModeToggle isOwner={isOwner} />}
 

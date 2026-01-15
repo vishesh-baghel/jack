@@ -273,16 +273,14 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">my drafts</h1>
-          <p className="text-muted-foreground">
-            {isGuest 
-              ? "browse my content drafts - the raw ideas before they ship"
-              : "your content vault. mark the bangers so jack learns your voice"
-            }
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold">my drafts</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          {isGuest
+            ? "browse my content drafts - the raw ideas before they ship"
+            : "your content vault. mark the bangers so jack learns your voice"
+          }
+        </p>
       </div>
 
       {/* Error Message */}
@@ -299,11 +297,11 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
       )}
 
       {/* Filter Tabs and Date Filter */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex gap-1 p-1 bg-muted/50 rounded-lg w-fit">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex gap-1 p-1 bg-muted/50 rounded-lg w-full sm:w-fit overflow-x-auto">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 cursor-pointer whitespace-nowrap ${
               filter === 'all'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
@@ -313,7 +311,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
           </button>
           <button
             onClick={() => setFilter('good')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 cursor-pointer whitespace-nowrap ${
               filter === 'good'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
@@ -323,7 +321,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
           </button>
           <button
             onClick={() => setFilter('posted')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 cursor-pointer whitespace-nowrap ${
               filter === 'posted'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
@@ -332,7 +330,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
             shipped ({posts.filter(p => p.isPosted).length})
           </button>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-2">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -416,15 +414,15 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
               )}
             </CardContent>
             {editingId !== post.draftId && (
-              <CardFooter className="flex justify-between gap-2 pt-0">
-                <div className="flex gap-2">
+              <CardFooter className="flex justify-between gap-2 pt-0 overflow-x-auto">
+                <div className="flex gap-2 shrink-0">
                   <GuestTooltipButton
                     size="sm"
                     variant="ghost"
                     onClick={() => handleStartEdit(post)}
                     disabled={post.isPosted}
                     isGuest={isGuest}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-muted-foreground hover:text-foreground whitespace-nowrap"
                   >
                     fix it
                   </GuestTooltipButton>
@@ -434,12 +432,12 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
                     onClick={() => openDeleteDialog(post)}
                     disabled={loadingAction === `delete-${post.draftId}`}
                     isGuest={isGuest}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 whitespace-nowrap"
                   >
                     {loadingAction === `delete-${post.draftId}` ? 'yeeting...' : 'yeet'}
                   </GuestTooltipButton>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   {!post.isMarkedGood && (
                     <GuestTooltipButton
                       size="sm"
@@ -447,6 +445,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
                       onClick={() => handleMarkAsGood(post)}
                       disabled={loadingId === post.draftId}
                       isGuest={isGuest}
+                      className="whitespace-nowrap"
                     >
                       {loadingId === post.draftId ? 'noting...' : 'this one hits'}
                     </GuestTooltipButton>
@@ -458,6 +457,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
                       onClick={() => handlePostToX(post)}
                       disabled={loadingAction === `post-${post.draftId}`}
                       isGuest={isGuest}
+                      className="whitespace-nowrap"
                     >
                       {loadingAction === `post-${post.draftId}` ? 'shipping...' : 'ship it'}
                     </GuestTooltipButton>

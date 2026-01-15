@@ -221,9 +221,9 @@ export function CreatorsManager({ userId, initialCreators = [], initialDailyLimi
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">tracked creators</h1>
-        <p className="text-muted-foreground">
-          {isGuest 
+        <h1 className="text-2xl sm:text-3xl font-bold">tracked creators</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          {isGuest
             ? "see who inspires my content - the creators i learn from"
             : "stalk the greats (ethically). jack learns from their energy"
           }
@@ -270,8 +270,8 @@ export function CreatorsManager({ userId, initialCreators = [], initialDailyLimi
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="flex-1 max-w-xs">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+            <div className="flex-1 max-w-full sm:max-w-xs">
               <Label htmlFor="dailyLimit">tweets per day</Label>
               <Input
                 id="dailyLimit"
@@ -287,7 +287,7 @@ export function CreatorsManager({ userId, initialCreators = [], initialDailyLimi
               onClick={handleSaveDailyLimit}
               disabled={pendingDailyLimit === dailyLimit || isUpdatingLimit || isGuest}
               isGuest={isGuest}
-              className="mt-6"
+              className="w-full sm:w-auto"
             >
               {isUpdatingLimit ? 'saving...' : 'save'}
             </GuestTooltipButton>
@@ -350,8 +350,8 @@ export function CreatorsManager({ userId, initialCreators = [], initialDailyLimi
           return (
             <Card key={creator.id}>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  {/* Left: Status dot and handle */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  {/* Top/Left: Status dot and handle */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${creator.isActive ? 'bg-green-500' : 'bg-muted-foreground'}`} />
                     <div className="min-w-0 flex-1">
@@ -362,16 +362,16 @@ export function CreatorsManager({ userId, initialCreators = [], initialDailyLimi
                     </div>
                   </div>
 
-                  {/* Right: Tweet count input, scaling message, and action buttons */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Bottom/Right: Tweet count input, scaling message, and action buttons */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     {creator.isActive && (
                       <>
                         {isScalingActive && actualCount !== creator.tweetCount && (
-                          <span className="text-xs text-amber-500 whitespace-nowrap">
+                          <span className="text-xs text-amber-500 whitespace-nowrap self-start sm:self-center">
                             (scaled to {actualCount})
                           </span>
                         )}
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 w-full sm:w-auto">
                           <Input
                             type="number"
                             min="1"
@@ -381,42 +381,45 @@ export function CreatorsManager({ userId, initialCreators = [], initialDailyLimi
                               handleCreatorCountChange(creator.id, Number(e.target.value))
                             }
                             disabled={updatingCreatorId === creator.id || isGuest}
-                            className="w-16 h-8 text-sm"
+                            className="w-20 h-8 text-sm flex-1 sm:flex-none"
                           />
                           <span className="text-xs text-muted-foreground whitespace-nowrap">tweets</span>
+                          {hasUnsavedChanges && (
+                            <GuestTooltipButton
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSaveCreatorTweetCount(creator.id)}
+                              disabled={updatingCreatorId === creator.id}
+                              isGuest={isGuest}
+                            >
+                              {updatingCreatorId === creator.id ? 'saving...' : 'save'}
+                            </GuestTooltipButton>
+                          )}
                         </div>
-                        {hasUnsavedChanges && (
-                          <GuestTooltipButton
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSaveCreatorTweetCount(creator.id)}
-                            disabled={updatingCreatorId === creator.id}
-                            isGuest={isGuest}
-                          >
-                            {updatingCreatorId === creator.id ? 'saving...' : 'save'}
-                          </GuestTooltipButton>
-                        )}
                       </>
                     )}
-                    <GuestTooltipButton
-                      size="sm"
-                      variant={creator.isActive ? 'outline' : 'default'}
-                      onClick={() => handleToggleCreator(creator.id)}
-                      isGuest={isGuest}
-                      disabled={deletingId === creator.id}
-                    >
-                      {creator.isActive ? 'chill' : 'resume stalking'}
-                    </GuestTooltipButton>
-                    <GuestTooltipButton
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => openDeleteDialog(creator)}
-                      isGuest={isGuest}
-                      disabled={deletingId === creator.id}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      {deletingId === creator.id ? 'yeeting...' : 'yeet'}
-                    </GuestTooltipButton>
+                    <div className="flex gap-2">
+                      <GuestTooltipButton
+                        size="sm"
+                        variant={creator.isActive ? 'outline' : 'default'}
+                        onClick={() => handleToggleCreator(creator.id)}
+                        isGuest={isGuest}
+                        disabled={deletingId === creator.id}
+                        className="flex-1 sm:flex-none"
+                      >
+                        {creator.isActive ? 'chill' : 'resume stalking'}
+                      </GuestTooltipButton>
+                      <GuestTooltipButton
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openDeleteDialog(creator)}
+                        isGuest={isGuest}
+                        disabled={deletingId === creator.id}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-1 sm:flex-none"
+                      >
+                        {deletingId === creator.id ? 'yeeting...' : 'yeet'}
+                      </GuestTooltipButton>
+                    </div>
                   </div>
                 </div>
               </CardContent>
