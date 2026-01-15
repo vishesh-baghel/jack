@@ -41,7 +41,8 @@ interface IdeasDashboardProps {
 
 export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProps) {
   const router = useRouter();
-  const [ideas, setIdeas] = useState<ContentIdea[]>(initialIdeas);
+  // Use lazy state initialization to avoid re-processing initialIdeas on every render
+  const [ideas, setIdeas] = useState<ContentIdea[]>(() => initialIdeas);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingOutlineId, setGeneratingOutlineId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<'suggested' | 'accepted' | 'rejected' | 'used'>('suggested');
@@ -76,10 +77,10 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
       if (!response.ok) throw new Error('Failed to generate ideas');
 
       const data = await response.json();
-      
-      // Add new ideas to local state
-      setIdeas([...data.ideas, ...ideas]);
-      
+
+      // Add new ideas to local state (use functional update to avoid stale closure)
+      setIdeas(prevIdeas => [...data.ideas, ...prevIdeas]);
+
       // Refresh server data to ensure consistency
       router.refresh();
     } catch (error) {
@@ -99,11 +100,11 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
 
       if (!response.ok) throw new Error('Failed to update idea');
 
-      // Update local state immediately for better UX
-      setIdeas(ideas.map(idea => 
+      // Update local state immediately for better UX (use functional update to avoid stale closure)
+      setIdeas(prevIdeas => prevIdeas.map(idea =>
         idea.id === ideaId ? { ...idea, status } : idea
       ));
-      
+
       // Refresh server data to ensure consistency
       router.refresh();
     } catch (error) {
@@ -229,7 +230,7 @@ export function IdeasDashboard({ userId, initialIdeas = [] }: IdeasDashboardProp
       {/* Ideas Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {paginatedIdeas.map((idea) => (
-          <Card key={idea.id} className="flex flex-col">
+          <Card key={idea.id} className="flex flex-col idea-card-optimized">
             <CardHeader>
               <CardTitle className="text-lg">{idea.title}</CardTitle>
               <CardDescription className="line-clamp-2">

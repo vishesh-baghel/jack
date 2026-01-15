@@ -48,18 +48,24 @@ describe('Ideas Dashboard - Pagination Integration', () => {
 
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
       expect(screen.getByLabelText('Previous page')).toBeInTheDocument();
       expect(screen.getByLabelText('Next page')).toBeInTheDocument();
     });
 
-    it('should not show pagination controls when 9 or fewer ideas', () => {
+    it('should show pagination with disabled buttons when 9 or fewer ideas', () => {
       const ideas = createMockIdeas(9);
 
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
-      expect(screen.queryByText(/Page \d+ of \d+/)).not.toBeInTheDocument();
-      expect(screen.queryByLabelText('Previous page')).not.toBeInTheDocument();
+      // Pagination always renders for consistent layout, showing 1/1
+      expect(screen.getByText('1/1')).toBeInTheDocument();
+
+      // Buttons should be disabled when totalPages = 1
+      const prevButton = screen.getByLabelText('Previous page');
+      const nextButton = screen.getByLabelText('Next page');
+      expect(prevButton).toBeDisabled();
+      expect(nextButton).toBeDisabled();
     });
 
     it('should display exactly 9 ideas on first page', () => {
@@ -79,7 +85,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
       // 25 ideas / 9 per page = 3 pages
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
     });
   });
 
@@ -91,14 +97,14 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
       // Initially on page 1
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Idea 0' })).toBeInTheDocument();
 
       // Click next
       await user.click(screen.getByLabelText('Next page'));
 
       // Should be on page 2
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Idea 9' })).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'Idea 0' })).not.toBeInTheDocument();
     });
@@ -111,13 +117,13 @@ describe('Ideas Dashboard - Pagination Integration', () => {
 
       // Go to page 2
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
 
       // Click previous
       await user.click(screen.getByLabelText('Previous page'));
 
       // Should be back on page 1
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Idea 0' })).toBeInTheDocument();
     });
 
@@ -140,7 +146,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       await user.click(screen.getByLabelText('Next page'));
       await user.click(screen.getByLabelText('Next page'));
 
-      expect(screen.getByText('Page 3 of 3')).toBeInTheDocument();
+      expect(screen.getByText('3/3')).toBeInTheDocument();
       expect(screen.getByLabelText('Next page')).toBeDisabled();
     });
 
@@ -181,13 +187,13 @@ describe('Ideas Dashboard - Pagination Integration', () => {
 
       // Navigate to page 2 in "suggested" status
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+      expect(screen.getByText('2/2')).toBeInTheDocument();
 
       // Switch to "accepted" status
       await user.click(screen.getByRole('button', { name: 'accepted' }));
 
       // Should reset to page 1
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
     });
 
     it('should maintain correct pagination after status filter', async () => {
@@ -208,7 +214,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
       // Initially showing "suggested" - should have 3 pages
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
 
       // Switch to "rejected" - should have 1 page (5 items)
       await user.click(screen.getByRole('button', { name: 'rejected' }));
@@ -235,7 +241,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
 
       // Navigate to page 2
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
 
       // Change date range to Past 15 days (which will still show all items)
       const dateRangeButton = screen.getByRole('button', { name: /Past \d+ (hr|days?)/i });
@@ -245,7 +251,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       await user.click(option15d);
 
       // Should reset to page 1
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
     });
   });
 
@@ -270,11 +276,11 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
       // "suggested" filter - 15 items = 2 pages
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
 
       // Switch to "accepted" - also 15 items = 2 pages
       await user.click(screen.getByRole('button', { name: 'accepted' }));
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
 
       const cards = screen.getAllByRole('heading', { level: 3 });
       expect(cards).toHaveLength(9);
@@ -298,7 +304,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
       // "suggested" should have pagination
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
 
       // Switch to "used" - only 3 items, no pagination
       await user.click(screen.getByRole('button', { name: 'used' }));
@@ -314,7 +320,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
       // Find the container with both elements
-      const controlsContainer = screen.getByText('Page 1 of 2').closest('div');
+      const controlsContainer = screen.getByText('1/2').closest('div');
       const dateRangeButton = screen.getByRole('button', { name: /Past \d+ days?/i });
 
       // Both should be in the same parent container
@@ -338,7 +344,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
 
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
     });
 
     it('should handle 1 item', () => {
@@ -364,7 +370,7 @@ describe('Ideas Dashboard - Pagination Integration', () => {
       render(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
       // 100 / 9 = 12 pages
-      expect(screen.getByText('Page 1 of 12')).toBeInTheDocument();
+      expect(screen.getByText('1/12')).toBeInTheDocument();
     });
   });
 
@@ -379,13 +385,13 @@ describe('Ideas Dashboard - Pagination Integration', () => {
 
       // Navigate to page 2
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
 
       // Rerender with same ideas (simulating re-fetch)
       rerender(<IdeasDashboard userId="user-1" initialIdeas={ideas} />);
 
       // Should still be on page 2
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
     });
   });
 });

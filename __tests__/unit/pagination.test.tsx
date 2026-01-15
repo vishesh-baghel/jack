@@ -24,7 +24,7 @@ describe('Pagination Component', () => {
         />
       );
 
-      expect(screen.getByText('Page 2 of 5')).toBeInTheDocument();
+      expect(screen.getByText('2/5')).toBeInTheDocument();
       expect(screen.getByLabelText('Previous page')).toBeInTheDocument();
       expect(screen.getByLabelText('Next page')).toBeInTheDocument();
     });
@@ -44,14 +44,14 @@ describe('Pagination Component', () => {
         />
       );
 
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
     });
 
-    it('should not render when totalPages is 1', () => {
+    it('should always render pagination for consistent layout', () => {
       const mockPrev = vi.fn();
       const mockNext = vi.fn();
 
-      const { container } = render(
+      render(
         <Pagination
           currentPage={1}
           totalPages={1}
@@ -62,14 +62,19 @@ describe('Pagination Component', () => {
         />
       );
 
-      expect(container.firstChild).toBeNull();
+      // Pagination always renders for consistent layout, even with 1 page
+      expect(screen.getByText('1/1')).toBeInTheDocument();
+      const prevButton = screen.getByLabelText('Previous page');
+      const nextButton = screen.getByLabelText('Next page');
+      expect(prevButton).toBeDisabled();
+      expect(nextButton).toBeDisabled();
     });
 
-    it('should not render when totalPages is 0', () => {
+    it('should render with disabled buttons when totalPages is 0', () => {
       const mockPrev = vi.fn();
       const mockNext = vi.fn();
 
-      const { container } = render(
+      render(
         <Pagination
           currentPage={1}
           totalPages={0}
@@ -80,7 +85,12 @@ describe('Pagination Component', () => {
         />
       );
 
-      expect(container.firstChild).toBeNull();
+      // Pagination always renders for consistent layout
+      expect(screen.getByText('1/0')).toBeInTheDocument();
+      const prevButton = screen.getByLabelText('Previous page');
+      const nextButton = screen.getByLabelText('Next page');
+      expect(prevButton).toBeDisabled();
+      expect(nextButton).toBeDisabled();
     });
   });
 
@@ -332,7 +342,7 @@ describe('Pagination Component', () => {
         />
       );
 
-      expect(screen.getByText('Page 99 of 100')).toBeInTheDocument();
+      expect(screen.getByText('99/100')).toBeInTheDocument();
     });
 
     it('should render correctly on last page of 2-page set', () => {
@@ -350,7 +360,7 @@ describe('Pagination Component', () => {
         />
       );
 
-      expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+      expect(screen.getByText('2/2')).toBeInTheDocument();
       expect(screen.getByLabelText('Previous page')).not.toBeDisabled();
       expect(screen.getByLabelText('Next page')).toBeDisabled();
     });

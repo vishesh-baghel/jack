@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GuestTooltipButton } from '@/components/guest-tooltip-button';
@@ -49,7 +49,8 @@ interface PostsListProps {
 }
 
 export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  // Use lazy state initialization to avoid re-processing initialPosts on every render
+  const [posts, setPosts] = useState<Post[]>(() => initialPosts);
   const [filter, setFilter] = useState<'all' | 'good' | 'posted'>('all');
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -59,20 +60,27 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
   const [isGuest, setIsGuest] = useState(false);
-  
-  const { 
-    dateRange, 
-    customStartDate, 
-    customEndDate, 
+
+  const {
+    dateRange,
+    customStartDate,
+    customEndDate,
     handleDateRangeChange,
     getStartDate,
-    getEndDate 
+    getEndDate
   } = useDateRangeFilter();
 
   useEffect(() => {
     const session = getUserSession();
     setIsGuest(session.isGuest);
   }, []);
+
+  // Memoize filter counts to avoid O(n) operations on every render
+  const filterCounts = useMemo(() => ({
+    all: posts.length,
+    good: posts.filter(p => p.isMarkedGood).length,
+    posted: posts.filter(p => p.isPosted).length,
+  }), [posts]);
 
   const handleMarkAsGood = async (post: Post) => {
     setLoadingId(post.draftId);
@@ -307,7 +315,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
                 : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
             }`}
           >
-            all ({posts.length})
+            all ({filterCounts.all})
           </button>
           <button
             onClick={() => setFilter('good')}
@@ -317,7 +325,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
                 : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
             }`}
           >
-            bangers ({posts.filter(p => p.isMarkedGood).length})
+            bangers ({filterCounts.good})
           </button>
           <button
             onClick={() => setFilter('posted')}
@@ -327,7 +335,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
                 : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
             }`}
           >
-            shipped ({posts.filter(p => p.isPosted).length})
+            shipped ({filterCounts.posted})
           </button>
         </div>
         <div className="flex items-center justify-between gap-2">
@@ -351,7 +359,7 @@ export function PostsList({ userId, initialPosts = [] }: PostsListProps) {
       {/* Posts List */}
       <div className="space-y-4">
         {paginatedPosts.map((post) => (
-          <Card key={post.draftId}>
+          <Card key={post.draftId} className="post-card-optimized">
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">

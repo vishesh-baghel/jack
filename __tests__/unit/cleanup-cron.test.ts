@@ -66,7 +66,7 @@ describe('Cleanup Cron Job', () => {
       expect(deleteOldTweets).not.toHaveBeenCalled();
     });
 
-    it('should reject requests when CRON_SECRET is not set', async () => {
+    it('should return 500 when CRON_SECRET is not set', async () => {
       delete process.env.CRON_SECRET;
 
       const request = new NextRequest('http://localhost:3000/api/cron/cleanup-tweets', {
@@ -78,7 +78,9 @@ describe('Cleanup Cron Job', () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(401);
+      // Returns 500 because it's a server configuration error
+      expect(response.status).toBe(500);
+      expect(data.error).toContain('CRON_SECRET not configured');
       expect(deleteOldTweets).not.toHaveBeenCalled();
     });
 

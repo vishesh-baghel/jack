@@ -20,6 +20,20 @@ vi.mock('@/lib/auth', () => ({
   isGuestUser: vi.fn(),
 }));
 
+// Mock Prisma client
+vi.mock('@/lib/db/client', () => ({
+  prisma: {
+    post: {
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
+// Mock pattern learning
+vi.mock('@/lib/db/pattern-learning', () => ({
+  triggerPatternLearning: vi.fn(() => Promise.resolve()),
+}));
+
 // Mock all database functions
 vi.mock('@/lib/db/drafts', () => ({
   getDraftById: vi.fn(),
@@ -64,6 +78,7 @@ import { getUserPosts, createPost, markPostAsGood } from '@/lib/db/posts';
 import { updateIdeaStatus } from '@/lib/db/content-ideas';
 import { getActiveCreators, addCreator, toggleCreatorStatus } from '@/lib/db/creators';
 import { validateTwitterHandle } from '@/lib/apify/twitter-scraper';
+import { prisma } from '@/lib/db/client';
 
 // Helper to create mock NextRequest
 const createMockRequest = (options: {
@@ -333,6 +348,11 @@ describe('Posts API Routes', () => {
     // Mock auth functions to return non-guest user
     vi.mocked(getCurrentUserId).mockResolvedValue('user-123');
     vi.mocked(blockGuestWrite).mockResolvedValue(null);
+    // Mock prisma for post lookup
+    vi.mocked(prisma.post.findUnique).mockResolvedValue({
+      id: 'post-123',
+      userId: 'user-123',
+    } as never);
   });
 
   describe('GET /api/posts - Get Posts', () => {

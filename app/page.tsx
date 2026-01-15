@@ -20,12 +20,20 @@ export default async function Home() {
 
   // Fetch all ideas from database
   const dbIdeas = await getAllIdeas(dataUserId);
-  
+
   // Transform database ideas to match component interface
+  // Only pass fields actually used by the client to minimize RSC serialization
   const ideas = dbIdeas.map(idea => ({
-    ...idea,
+    id: idea.id,
+    title: idea.title,
+    description: idea.description,
+    rationale: idea.rationale,
+    contentPillar: idea.contentPillar,
+    suggestedFormat: idea.suggestedFormat,
     estimatedEngagement: idea.estimatedEngagement as 'low' | 'medium' | 'high',
     status: idea.status as 'suggested' | 'accepted' | 'rejected' | 'used',
+    createdAt: idea.createdAt,
+    outlines: idea.outlines?.map(outline => ({ id: outline.id })),
   }));
 
   return (

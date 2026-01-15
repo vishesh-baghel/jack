@@ -49,9 +49,10 @@ describe('ToneConfigComponent', () => {
     const { ToneConfigComponent } = await import('@/components/tone-config');
     render(<ToneConfigComponent userId={mockUserId} initialConfig={mockInitialConfig} />);
 
-    expect(screen.getByText('settings')).toBeInTheDocument();
+    // Note: "settings" heading moved to page level, not in component anymore
     expect(screen.getByText('custom voice rules')).toBeInTheDocument();
     expect(screen.getByText('what jack learned')).toBeInTheDocument();
+    expect(screen.getByText('your voice settings')).toBeInTheDocument();
   });
 
   it('should display initial custom rules', async () => {

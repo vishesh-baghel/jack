@@ -29,8 +29,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, contentIdeaId, idea } = RequestSchema.parse(body);
 
-    // Fetch user data
-    const user = await getUserWithRelations(userId);
+    // Start independent fetches in parallel to eliminate waterfall
+    const userPromise = getUserWithRelations(userId);
+    const goodPostsPromise = getGoodPostsForLearning(userId, 10);
+
+    // Wait for user first to check if exists (early return)
+    const user = await userPromise;
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -38,8 +42,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get good posts for learning
-    const goodPosts = await getGoodPostsForLearning(userId, 10);
+    // Wait for good posts to complete
+    const goodPosts = await goodPostsPromise;
 
     // Build context
     const context = await buildOutlineContext(idea, user, goodPosts);

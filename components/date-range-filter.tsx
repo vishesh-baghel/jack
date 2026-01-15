@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -38,33 +38,20 @@ export function DateRangeFilter({
   const [tempEndDate, setTempEndDate] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const formatDateForInput = (date: Date): string => {
+  const formatDateForInput = useCallback((date: Date): string => {
     return date.toISOString().split('T')[0];
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setShowCustomInputs(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getDisplayLabel = (): string => {
+  const getDisplayLabel = useCallback((): string => {
     if (value === 'custom' && customStartDate && customEndDate) {
       const start = customStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const end = customEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return `${start} - ${end}`;
     }
     return OPTIONS.find(opt => opt.value === value)?.label || 'Past 24 hr';
-  };
+  }, [value, customStartDate, customEndDate]);
 
-  const handleOptionSelect = (option: DateRangeOption) => {
+  const handleOptionSelect = useCallback((option: DateRangeOption) => {
     if (option === 'custom') {
       setShowCustomInputs(true);
       // Use existing custom dates if available, otherwise default to past 7 days
@@ -83,9 +70,9 @@ export function DateRangeFilter({
       setIsOpen(false);
       setShowCustomInputs(false);
     }
-  };
+  }, [customStartDate, customEndDate, onChange, formatDateForInput]);
 
-  const handleApplyCustomRange = () => {
+  const handleApplyCustomRange = useCallback(() => {
     if (tempStartDate && tempEndDate) {
       const start = new Date(tempStartDate);
       const end = new Date(tempEndDate);
@@ -94,7 +81,20 @@ export function DateRangeFilter({
       setIsOpen(false);
       setShowCustomInputs(false);
     }
-  };
+  }, [tempStartDate, tempEndDate, onChange]);
+
+  // Close dropdown when clicking outside - stable handler to avoid listener churn
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setShowCustomInputs(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []); // No dependencies needed - uses setState which is stable
 
   return (
     <div className="relative" ref={dropdownRef}>

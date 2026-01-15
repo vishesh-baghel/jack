@@ -11,6 +11,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock dependencies before imports
 vi.mock('@/lib/db/client');
+vi.mock('@/lib/db/creator-tweets', () => ({
+  getAllCreatorTweets: vi.fn(() => Promise.resolve([])),
+}));
 vi.mock('@/lib/observability/langfuse', () => ({
   createIdeaTrace: vi.fn(() => ({
     span: vi.fn(() => ({

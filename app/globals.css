@@ -76,3 +76,22 @@ textarea.custom-scrollbar::-webkit-scrollbar-thumb {
 textarea.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.5);
 }
+
+/* Performance: Content visibility for long lists */
+/* Defers rendering of off-screen items for faster initial render */
+.list-item-optimized {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 200px; /* Estimated height for layout */
+}
+
+/* For idea cards in grid layout */
+.idea-card-optimized {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 350px; /* Estimated height for layout */
+}
+
+/* For post cards in list layout */
+.post-card-optimized {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 250px; /* Estimated height for layout */
+}

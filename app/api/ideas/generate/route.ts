@@ -28,8 +28,13 @@ export async function POST(request: NextRequest) {
 
     console.log(`[IDEA_GEN] Starting idea generation for user ${userId}`);
 
-    // Fetch user data with relations
-    const user = await getUserWithRelations(userId);
+    // Start independent fetches in parallel to eliminate waterfall
+    const userPromise = getUserWithRelations(userId);
+    const goodPostsPromise = getGoodPostsForLearning(userId, 10);
+    const recentIdeasPromise = getRecentIdeas(userId);
+
+    // Wait for user first to check if exists (early return)
+    const user = await userPromise;
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -45,12 +50,13 @@ export async function POST(request: NextRequest) {
       hasToneConfig: !!user.toneConfig,
     });
 
-    // Get good posts for learning
-    const goodPosts = await getGoodPostsForLearning(userId, 10);
-    console.log(`[IDEA_GEN] Fetched ${goodPosts.length} good posts for learning`);
+    // Wait for remaining parallel fetches to complete
+    const [goodPosts, recentIdeas] = await Promise.all([
+      goodPostsPromise,
+      recentIdeasPromise,
+    ]);
 
-    // Get recent ideas for context
-    const recentIdeas = await getRecentIdeas(userId);
+    console.log(`[IDEA_GEN] Fetched ${goodPosts.length} good posts for learning`);
     console.log(`[IDEA_GEN] Fetched ${recentIdeas.length} recent ideas`);
 
     // Build context

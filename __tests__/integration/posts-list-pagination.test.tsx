@@ -49,17 +49,24 @@ describe('Posts List - Pagination Integration', () => {
 
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
       expect(screen.getByLabelText('Previous page')).toBeInTheDocument();
       expect(screen.getByLabelText('Next page')).toBeInTheDocument();
     });
 
-    it('should not show pagination controls when 9 or fewer posts', () => {
+    it('should show pagination with disabled buttons when 9 or fewer posts', () => {
       const posts = createMockPosts(9);
 
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
-      expect(screen.queryByText(/Page \d+ of \d+/)).not.toBeInTheDocument();
+      // Pagination always renders for consistent layout, showing 1/1
+      expect(screen.getByText('1/1')).toBeInTheDocument();
+
+      // Buttons should be disabled when totalPages = 1
+      const prevButton = screen.getByLabelText('Previous page');
+      const nextButton = screen.getByLabelText('Next page');
+      expect(prevButton).toBeDisabled();
+      expect(nextButton).toBeDisabled();
     });
 
     it('should display exactly 9 posts on first page', () => {
@@ -79,7 +86,7 @@ describe('Posts List - Pagination Integration', () => {
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
       // 25 posts / 9 per page = 3 pages
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
     });
   });
 
@@ -90,12 +97,12 @@ describe('Posts List - Pagination Integration', () => {
 
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
       expect(screen.getByText('Post content 0')).toBeInTheDocument();
 
       await user.click(screen.getByLabelText('Next page'));
 
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
       expect(screen.getByText('Post content 9')).toBeInTheDocument();
       expect(screen.queryByText('Post content 0')).not.toBeInTheDocument();
     });
@@ -107,11 +114,11 @@ describe('Posts List - Pagination Integration', () => {
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
 
       await user.click(screen.getByLabelText('Previous page'));
 
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
       expect(screen.getByText('Post content 0')).toBeInTheDocument();
     });
 
@@ -133,7 +140,7 @@ describe('Posts List - Pagination Integration', () => {
       await user.click(screen.getByLabelText('Next page'));
       await user.click(screen.getByLabelText('Next page'));
 
-      expect(screen.getByText('Page 3 of 3')).toBeInTheDocument();
+      expect(screen.getByText('3/3')).toBeInTheDocument();
       expect(screen.getByLabelText('Next page')).toBeDisabled();
     });
 
@@ -174,13 +181,13 @@ describe('Posts List - Pagination Integration', () => {
 
       // Navigate to page 2 in "all" filter
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
 
       // Switch to "bangers" filter
       await user.click(screen.getByRole('button', { name: /bangers/ }));
 
       // Should reset to page 1
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
     });
 
     it('should maintain correct pagination after filter', async () => {
@@ -200,7 +207,7 @@ describe('Posts List - Pagination Integration', () => {
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
       // "all" filter - 25 items = 3 pages
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
 
       // Switch to "shipped" - 5 items, no pagination needed
       await user.click(screen.getByRole('button', { name: /shipped/ }));
@@ -228,7 +235,7 @@ describe('Posts List - Pagination Integration', () => {
 
       // Navigate to page 2
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
 
       // Change date range to Past 15 days (which will still show all items)
       const dateRangeButton = screen.getByRole('button', { name: /Past \d+ (hr|days?)/i });
@@ -238,7 +245,7 @@ describe('Posts List - Pagination Integration', () => {
       await user.click(option15d);
 
       // Should reset to page 1
-      expect(screen.getByText('Page 1 of 3')).toBeInTheDocument();
+      expect(screen.getByText('1/3')).toBeInTheDocument();
     });
   });
 
@@ -263,7 +270,7 @@ describe('Posts List - Pagination Integration', () => {
       await user.click(screen.getByRole('button', { name: /bangers/ }));
 
       // 15 good posts = 2 pages
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
 
       const postCards = screen.getAllByText(/Good post \d+/);
       expect(postCards).toHaveLength(9);
@@ -289,7 +296,7 @@ describe('Posts List - Pagination Integration', () => {
       await user.click(screen.getByRole('button', { name: /shipped/ }));
 
       // 18 posted items = 2 pages
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
 
       const postCards = screen.getAllByText(/Shipped \d+/);
       expect(postCards).toHaveLength(9);
@@ -327,7 +334,7 @@ describe('Posts List - Pagination Integration', () => {
       await user.click(screen.getByRole('button', { name: /bangers/ }));
 
       // With default 7d filter, should only see recent ones (15 = 2 pages)
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
     });
   });
 
@@ -337,7 +344,7 @@ describe('Posts List - Pagination Integration', () => {
 
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
-      const controlsContainer = screen.getByText('Page 1 of 2').closest('div');
+      const controlsContainer = screen.getByText('1/2').closest('div');
       const dateRangeButton = screen.getByRole('button', { name: /Past \d+ days?/i });
 
       expect(controlsContainer?.parentElement).toContainElement(dateRangeButton);
@@ -360,7 +367,7 @@ describe('Posts List - Pagination Integration', () => {
 
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
-      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByText('1/2')).toBeInTheDocument();
     });
 
     it('should handle 1 post', () => {
@@ -386,7 +393,7 @@ describe('Posts List - Pagination Integration', () => {
       render(<PostsList userId="user-1" initialPosts={posts} />);
 
       // 100 / 9 = 12 pages
-      expect(screen.getByText('Page 1 of 12')).toBeInTheDocument();
+      expect(screen.getByText('1/12')).toBeInTheDocument();
     });
   });
 
@@ -434,10 +441,10 @@ describe('Posts List - Pagination Integration', () => {
 
       // Navigate to page 2
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
 
       // Should still be on page 2 after state updates
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
     });
   });
 
@@ -452,13 +459,13 @@ describe('Posts List - Pagination Integration', () => {
 
       // Navigate to page 2
       await user.click(screen.getByLabelText('Next page'));
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
 
       // Rerender with same posts
       rerender(<PostsList userId="user-1" initialPosts={posts} />);
 
       // Should still be on page 2
-      expect(screen.getByText('Page 2 of 3')).toBeInTheDocument();
+      expect(screen.getByText('2/3')).toBeInTheDocument();
     });
   });
 });
