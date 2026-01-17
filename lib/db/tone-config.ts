@@ -3,7 +3,7 @@
  */
 
 import { prisma } from './client';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '.prisma/client-jack';
 import type { LearnedPatterns } from '@/lib/mastra/schemas';
 
 /**

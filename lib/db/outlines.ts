@@ -4,7 +4,7 @@
 
 import { prisma } from './client';
 import type { ContentOutline } from '@/lib/mastra/schemas';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '.prisma/client-jack';
 
 /**
  * Create an outline for a content idea

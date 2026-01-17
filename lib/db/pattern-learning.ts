@@ -6,7 +6,7 @@
 import { analyzeGoodPosts } from '@/lib/mastra/pattern-analyzer';
 import { getGoodPostsForLearning } from './posts';
 import { prisma } from './client';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '.prisma/client-jack';
 
 /**
  * Trigger pattern learning for a user
