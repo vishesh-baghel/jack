@@ -30,6 +30,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './'),
+      '.prisma/client-jack': resolve(__dirname, './node_modules/.prisma/client-jack'),
     },
   },
 });

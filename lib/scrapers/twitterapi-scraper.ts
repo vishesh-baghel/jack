@@ -116,8 +116,8 @@ export class TwitterAPIScraper implements TwitterScraper {
     try {
       console.log(`[TWITTERAPI.IO] Validating handle: ${normalizedHandle}`);
 
-      // Use user_about endpoint for validation
-      const url = `https://api.twitterapi.io/twitter/user_about?userName=${normalizedHandle}`;
+      // Use user/info endpoint for validation
+      const url = `https://api.twitterapi.io/twitter/user/info?userName=${normalizedHandle}`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -150,12 +150,16 @@ export class TwitterAPIScraper implements TwitterScraper {
         status: data.status,
         hasData: !!data.data,
         userId: data.data?.id,
+        msg: data.msg,
+        fullResponse: JSON.stringify(data),
       });
 
       if (data.status !== 'success' || !data.data || !data.data.id) {
+        const errorMsg = data.msg || 'Twitter account not found or API error.';
+        console.error(`[TWITTERAPI.IO] Validation failed: ${errorMsg}`);
         return {
           valid: false,
-          error: data.msg || 'Twitter account not found.',
+          error: errorMsg,
         };
       }
 
